@@ -202,7 +202,7 @@ export default function JournalPage() {
             <div key={field} className="rounded-xl p-4" style={{ background: "#0D0D0D", border: "1px solid #1A1A1A" }}>
               <p className="font-mono text-[10px] uppercase tracking-widest mb-2" style={{ color }}>{label}</p>
               <textarea
-                value={(entry as Record<string, string>)[field]}
+                value={(entry as unknown as Record<string, string>)[field]}
                 onChange={e => update({ [field]: e.target.value } as Partial<JournalEntry>)}
                 placeholder={placeholder}
                 rows={4}

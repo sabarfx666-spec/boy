@@ -160,7 +160,7 @@ export default function WeeklyOutlookPage() {
               <p className="font-mono text-xs font-bold uppercase tracking-widest" style={{ color }}>{label}</p>
             </div>
             <textarea
-              value={(entry as Record<string, string>)[key] ?? ""}
+              value={(entry as unknown as Record<string, string>)[key] ?? ""}
               onChange={e => update({ [key]: e.target.value } as Partial<WeeklyEntry>)}
               placeholder={placeholder}
               rows={7}

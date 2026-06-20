@@ -424,7 +424,6 @@ export default function AdminPage() {
             </div>
           </>}
         </div>
-        </div>
 
         {/* ── PENDING ── */}
         <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(245,158,11,0.3)" }}>
