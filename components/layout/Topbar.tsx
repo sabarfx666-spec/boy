@@ -117,7 +117,6 @@ function UserMenu() {
                 <span className="px-1.5 py-0.5 rounded font-mono text-[9px] font-bold" style={{ background: "rgba(229,62,62,0.15)", color: "#E53E3E" }}>ADMIN</span>
               )}
             </div>
-            <p className="text-[11px] text-[#555] truncate mt-0.5">{user.email}</p>
           </div>
           {user.role === "admin" && (
             <button
