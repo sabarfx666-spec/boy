@@ -119,30 +119,6 @@ export function TradeSummary() {
           )}
         </div>
 
-        {/* Discord button */}
-        <button
-          onClick={() => setShowSettings(true)}
-          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 hover:opacity-90"
-          style={{
-            background: webhookUrl ? "rgba(88,101,242,0.18)" : "rgba(88,101,242,0.06)",
-            border: `1px solid ${webhookUrl ? "#5865F266" : "rgba(88,101,242,0.2)"}`,
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <Send size={13} style={{ color: "#5865F2" }} />
-            <span className="font-mono text-xs font-bold" style={{ color: "#5865F2" }}>
-              {webhookUrl ? "Discord Connected" : "Connect Discord"}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            {sendStatus === "sending" && <span className="font-mono text-[10px] text-[#5865F2] animate-pulse">Sending…</span>}
-            {sendStatus === "ok"      && <CheckCircle size={13} style={{ color: "#00FF7F" }} />}
-            {sendStatus === "error"   && <XCircle size={13} style={{ color: "#FF3B3B" }} />}
-            <div className="w-2 h-2 rounded-full" style={{ background: webhookUrl ? "#5865F2" : "#222",
-              boxShadow: webhookUrl ? "0 0 6px 2px rgba(88,101,242,0.6)" : "none" }} />
-            <Settings size={12} style={{ color: "#5865F2" }} />
-          </div>
-        </button>
 
         {/* Trade info */}
         <div className="flex-1 space-y-2">
