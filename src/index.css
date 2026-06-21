@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background-color: #0f111a;
+  color: #e0e0f0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+input[type='number'] { -moz-appearance: textfield; }
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #13151f; }
+::-webkit-scrollbar-thumb { background: #2a2d3e; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3d4e; }
