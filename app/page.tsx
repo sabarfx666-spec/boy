@@ -5,6 +5,7 @@ import { PsychologySelector }  from "@/components/journal/PsychologySelector";
 import { ChecklistProgress }   from "@/components/journal/ChecklistProgress";
 import { RulesList }           from "@/components/journal/RulesList";
 import { TradeSummary }        from "@/components/journal/TradeSummary";
+import { DailyHeaderStats }    from "@/components/journal/DailyHeaderStats";
 export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto space-y-5">
@@ -14,6 +15,7 @@ export default function Dashboard() {
         <div className="w-2 h-8 rounded-full anim-glow-green" style={{ background: "#00FF7F" }} />
         <h1 className="font-mono text-xl font-black text-white tracking-widest uppercase">Daily Journal</h1>
         <span className="font-mono text-xs text-[#333] anim-blink">▌</span>
+        <DailyHeaderStats />
       </div>
 
       {/* Top selectors — staggered */}
