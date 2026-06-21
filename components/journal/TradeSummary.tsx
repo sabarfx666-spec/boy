@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSabar } from "@/store/SabarContext";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { sendTradeToDiscord } from "@/lib/discord";
-import { Send, CheckCircle, XCircle, Settings, Lock, Clock } from "lucide-react";
+import { Send, CheckCircle, XCircle, Settings, Lock, Clock, Upload, X } from "lucide-react";
 
 const WEBHOOK_KEY = "sabar-discord-webhook";
 const DAILY_LIMIT = 2;
@@ -34,6 +34,9 @@ export function TradeSummary() {
   const [notes, setNotes]         = useState("");
   const [outcome, setOutcome]     = useState<"WIN" | "LOSS" | "BE">("WIN");
   const [pnl, setPnl]             = useState<string>("");
+  const [lotSize, setLotSize]     = useState<string>("");
+  const [rr, setRr]               = useState<string>("");
+  const [riskPct, setRiskPct]     = useState<string>("");
   const [showModal, setShowModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [actionType, setActionType] = useState<"TAKE" | "SKIP">("TAKE");
@@ -42,6 +45,28 @@ export function TradeSummary() {
   const [sendStatus, setSendStatus] = useState<"idle" | "sending" | "ok" | "error">("idle");
   const [manualUnlock, setManualUnlock] = useState(false);
   const [showUnlockConfirm, setShowUnlockConfirm] = useState(false);
+  const [imgBefore, setImgBefore] = useState<string | null>(null);
+  const [imgAfter,  setImgAfter]  = useState<string | null>(null);
+  const [dragOver,  setDragOver]  = useState<"before" | "after" | null>(null);
+  const fileRefBefore = useRef<HTMLInputElement>(null);
+  const fileRefAfter  = useRef<HTMLInputElement>(null);
+
+  function readImg(which: "before" | "after", file?: File | null) {
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const result = e.target?.result as string;
+      which === "before" ? setImgBefore(result) : setImgAfter(result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function onPaste(which: "before" | "after") {
+    return (e: React.ClipboardEvent) => {
+      const file = Array.from(e.clipboardData.files).find(f => f.type.startsWith("image/"));
+      if (file) readImg(which, file);
+    };
+  }
 
   const countdown = useCountdownToMidnight();
 
@@ -71,7 +96,16 @@ export function TradeSummary() {
     const parsedPnl = pnl !== "" ? parseFloat(pnl) : undefined;
     dispatch({
       type: actionType === "TAKE" ? "TAKE_TRADE" : "SKIP_TRADE",
-      payload: { outcome: actionType === "TAKE" ? outcome : undefined, notes: notes.trim() || undefined, pnl: parsedPnl },
+      payload: {
+        outcome:    actionType === "TAKE" ? outcome : undefined,
+        notes:      notes.trim() || undefined,
+        pnl:        parsedPnl,
+        lotSize:    lotSize !== "" ? parseFloat(lotSize) : undefined,
+        rr:         rr      !== "" ? parseFloat(rr)      : 0,
+        riskPercent: riskPct !== "" ? parseFloat(riskPct) : state.riskPercent,
+        imgBefore:  imgBefore ?? undefined,
+        imgAfter:   imgAfter  ?? undefined,
+      },
     });
     if (webhookUrl) {
       setSendStatus("sending");
@@ -87,7 +121,7 @@ export function TradeSummary() {
       } catch { setSendStatus("error"); }
       setTimeout(() => setSendStatus("idle"), 3000);
     }
-    setNotes(""); setOutcome("WIN"); setPnl(""); setShowModal(false);
+    setNotes(""); setOutcome("WIN"); setPnl(""); setLotSize(""); setRr(""); setRiskPct(""); setImgBefore(null); setImgAfter(null); setShowModal(false);
   };
 
   const saveWebhook = () => {
@@ -260,8 +294,68 @@ export function TradeSummary() {
                 </div>
                 <p className="font-mono text-[10px] text-[#444] mt-1">Negative for a loss, e.g. -50.00</p>
               </div>
+
+              {/* Lot Size · R:R · Risk % */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Lot Size", value: lotSize, setter: setLotSize, placeholder: "0.01", step: "0.01", suffix: null },
+                  { label: "R : R",    value: rr,      setter: setRr,      placeholder: "1.5",  step: "0.1",  suffix: null },
+                  { label: "Risk %",   value: riskPct, setter: setRiskPct, placeholder: "1.0",  step: "0.1",  suffix: "%" },
+                ].map(({ label, value, setter, placeholder, step, suffix }) => (
+                  <div key={label}>
+                    <label className="font-mono text-[10px] text-[#A0A0A0] uppercase tracking-widest block mb-1.5">{label}</label>
+                    <div className="flex items-center gap-1 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-2.5 py-2 focus-within:border-[#6AECE1]">
+                      <input type="number" step={step} value={value} onChange={e => setter(e.target.value)}
+                        placeholder={placeholder}
+                        className="flex-1 w-full bg-transparent font-mono text-sm text-white focus:outline-none placeholder-[#444] min-w-0" />
+                      {suffix && <span className="font-mono text-xs text-[#555]">{suffix}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </>
           )}
+          {/* Chart Screenshots */}
+          <div>
+            <label className="font-mono text-xs text-[#A0A0A0] uppercase tracking-widest block mb-2">Chart Screenshots</label>
+            <div className="grid grid-cols-2 gap-3">
+              {([
+                { key: "before" as const, label: "BEFORE", color: "#6AECE1", img: imgBefore, setImg: setImgBefore, ref: fileRefBefore },
+                { key: "after"  as const, label: "AFTER",  color: "#00FF7F", img: imgAfter,  setImg: setImgAfter,  ref: fileRefAfter  },
+              ]).map(({ key, label, color, img, setImg, ref }) => (
+                <div key={key} className="flex flex-col gap-1.5">
+                  <span className="font-mono text-[9px] font-black uppercase tracking-widest" style={{ color }}>{label}</span>
+                  {img ? (
+                    <div className="relative group rounded-lg overflow-hidden" style={{ border: "1px solid #2A2A2A" }}>
+                      <img src={img} alt={label} className="w-full object-cover rounded-lg" style={{ maxHeight: 110 }} />
+                      <button onClick={() => setImg(null)}
+                        className="absolute top-1.5 right-1.5 p-1 rounded bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#FF3B3B]">
+                        <X size={11} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div tabIndex={0} onPaste={onPaste(key)}
+                      onDrop={e => { e.preventDefault(); setDragOver(null); readImg(key, e.dataTransfer.files?.[0]); }}
+                      onDragOver={e => { e.preventDefault(); setDragOver(key); }}
+                      onDragLeave={() => setDragOver(null)}
+                      onClick={() => ref.current?.click()}
+                      className="flex flex-col items-center justify-center gap-1.5 rounded-lg cursor-pointer transition-all py-6 focus:outline-none"
+                      style={{
+                        border: `2px dashed ${dragOver === key ? color : "#2A2A2A"}`,
+                        background: dragOver === key ? `${color}08` : "#1A1A1A",
+                      }}>
+                      <Upload size={14} style={{ color: "#444" }} />
+                      <span className="font-mono text-[9px] font-bold" style={{ color: "#444" }}>Click or Paste</span>
+                      <span className="font-mono text-[8px]" style={{ color: "#333" }}>Ctrl+V · Drag & Drop</span>
+                    </div>
+                  )}
+                  <input ref={ref} type="file" accept="image/*" className="hidden"
+                    onChange={e => readImg(key, e.target.files?.[0])} />
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div>
             <label className="font-mono text-xs text-[#A0A0A0] uppercase tracking-widest block mb-2">Notes (optional)</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)}

@@ -39,6 +39,8 @@ export interface Trade {
   notes?: string;
   chartProof?: string;
   chartProofs?: Partial<Record<"5M" | "15M" | "4H" | "Daily" | "Result", string>>;
+  imgBefore?: string;
+  imgAfter?: string;
 }
 
 export interface SabarState {
