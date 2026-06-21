@@ -70,6 +70,22 @@ export function TradeSummary() {
 
   const countdown = useCountdownToMidnight();
 
+  // Auto-calculate P&L from Risk % and R:R
+  useEffect(() => {
+    const totalPnlSoFar = state.trades.reduce((s, t) => s + (t.pnl ?? 0), 0);
+    const balance = state.accountBalance + totalPnlSoFar;
+    const risk = parseFloat(riskPct) || state.riskPercent;
+    const rrVal = parseFloat(rr);
+    const riskDollar = balance * (risk / 100);
+    if (outcome === "WIN" && rrVal > 0) {
+      setPnl((riskDollar * rrVal).toFixed(2));
+    } else if (outcome === "LOSS") {
+      setPnl((-riskDollar).toFixed(2));
+    } else if (outcome === "BE") {
+      setPnl("0");
+    }
+  }, [outcome, riskPct, rr, state.riskPercent, state.accountBalance, state.trades]);
+
   useEffect(() => {
     const saved = localStorage.getItem(WEBHOOK_KEY) ?? "";
     setWebhookUrl(saved);
