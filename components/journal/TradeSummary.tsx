@@ -37,6 +37,7 @@ export function TradeSummary() {
   const [lotSize, setLotSize]     = useState<string>("");
   const [rr, setRr]               = useState<string>("");
   const [riskPct, setRiskPct]     = useState<string>("");
+  const [slPips, setSlPips]       = useState<string>("");
   const [showModal, setShowModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [actionType, setActionType] = useState<"TAKE" | "SKIP">("TAKE");
@@ -85,6 +86,18 @@ export function TradeSummary() {
       setPnl("0");
     }
   }, [outcome, riskPct, rr, state.riskPercent, state.accountBalance, state.trades]);
+
+  // Auto-calculate Lot Size from Risk $ ÷ (SL Pips × 10)
+  useEffect(() => {
+    const totalPnlSoFar = state.trades.reduce((s, t) => s + (t.pnl ?? 0), 0);
+    const balance = state.accountBalance + totalPnlSoFar;
+    const risk = parseFloat(riskPct) || state.riskPercent;
+    const sl = parseFloat(slPips);
+    if (sl > 0) {
+      const riskDollar = balance * (risk / 100);
+      setLotSize((riskDollar / (sl * 10)).toFixed(2));
+    }
+  }, [riskPct, slPips, state.riskPercent, state.accountBalance, state.trades]);
 
   useEffect(() => {
     const saved = localStorage.getItem(WEBHOOK_KEY) ?? "";
@@ -137,7 +150,7 @@ export function TradeSummary() {
       } catch { setSendStatus("error"); }
       setTimeout(() => setSendStatus("idle"), 3000);
     }
-    setNotes(""); setOutcome("WIN"); setPnl(""); setLotSize(""); setRr(""); setRiskPct(""); setImgBefore(null); setImgAfter(null); setShowModal(false);
+    setNotes(""); setOutcome("WIN"); setPnl(""); setLotSize(""); setRr(""); setRiskPct(""); setSlPips(""); setImgBefore(null); setImgAfter(null); setShowModal(false);
   };
 
   const saveWebhook = () => {
@@ -311,12 +324,12 @@ export function TradeSummary() {
                 <p className="font-mono text-[10px] text-[#444] mt-1">Negative for a loss, e.g. -50.00</p>
               </div>
 
-              {/* Lot Size · R:R · Risk % */}
-              <div className="grid grid-cols-3 gap-3">
+              {/* SL Pips · Lot Size (auto) · R:R · Risk % */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Row 1: Risk % and SL Pips (inputs that drive auto-calc) */}
                 {[
-                  { label: "Lot Size", value: lotSize, setter: setLotSize, placeholder: "0.01", step: "0.01", suffix: null },
-                  { label: "R : R",    value: rr,      setter: setRr,      placeholder: "1.5",  step: "0.1",  suffix: null },
-                  { label: "Risk %",   value: riskPct, setter: setRiskPct, placeholder: "1.0",  step: "0.1",  suffix: "%" },
+                  { label: "Risk %",   value: riskPct, setter: setRiskPct, placeholder: "1.0", step: "0.1", suffix: "%", auto: false },
+                  { label: "SL Pips",  value: slPips,  setter: setSlPips,  placeholder: "10",  step: "1",   suffix: null, auto: false },
                 ].map(({ label, value, setter, placeholder, step, suffix }) => (
                   <div key={label}>
                     <label className="font-mono text-[10px] text-[#A0A0A0] uppercase tracking-widest block mb-1.5">{label}</label>
@@ -328,6 +341,30 @@ export function TradeSummary() {
                     </div>
                   </div>
                 ))}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {/* Row 2: Lot Size (auto) and R:R */}
+                <div>
+                  <label className="font-mono text-[10px] uppercase tracking-widest block mb-1.5 flex items-center gap-1.5"
+                    style={{ color: "#6AECE1" }}>
+                    Lot Size <span className="text-[8px] px-1 py-0.5 rounded" style={{ background: "rgba(106,236,225,0.15)", color: "#6AECE1" }}>AUTO</span>
+                  </label>
+                  <div className="flex items-center gap-1 rounded-lg px-2.5 py-2"
+                    style={{ background: "rgba(106,236,225,0.06)", border: "1px solid rgba(106,236,225,0.2)" }}>
+                    <input type="number" step="0.01" value={lotSize} onChange={e => setLotSize(e.target.value)}
+                      placeholder="0.01"
+                      className="flex-1 w-full bg-transparent font-mono text-sm focus:outline-none placeholder-[#333] min-w-0"
+                      style={{ color: "#6AECE1" }} />
+                  </div>
+                </div>
+                <div>
+                  <label className="font-mono text-[10px] text-[#A0A0A0] uppercase tracking-widest block mb-1.5">R : R</label>
+                  <div className="flex items-center gap-1 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-2.5 py-2 focus-within:border-[#6AECE1]">
+                    <input type="number" step="0.1" value={rr} onChange={e => setRr(e.target.value)}
+                      placeholder="1.5"
+                      className="flex-1 w-full bg-transparent font-mono text-sm text-white focus:outline-none placeholder-[#444] min-w-0" />
+                  </div>
+                </div>
               </div>
             </>
           )}
