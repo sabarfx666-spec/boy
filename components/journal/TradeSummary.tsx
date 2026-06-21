@@ -35,8 +35,8 @@ export function TradeSummary() {
   const [outcome, setOutcome]     = useState<"WIN" | "LOSS" | "BE">("WIN");
   const [pnl, setPnl]             = useState<string>("");
   const [lotSize, setLotSize]     = useState<string>("");
-  const [rr, setRr]               = useState<string>("");
-  const [riskPct, setRiskPct]     = useState<string>("");
+  const [rr, setRr]               = useState<string>("2");
+  const [riskPct, setRiskPct]     = useState<string>("1");
   const [slPips, setSlPips]       = useState<string>("");
   const [showModal, setShowModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -150,7 +150,7 @@ export function TradeSummary() {
       } catch { setSendStatus("error"); }
       setTimeout(() => setSendStatus("idle"), 3000);
     }
-    setNotes(""); setOutcome("WIN"); setPnl(""); setLotSize(""); setRr(""); setRiskPct(""); setSlPips(""); setImgBefore(null); setImgAfter(null); setShowModal(false);
+    setNotes(""); setOutcome("WIN"); setPnl(""); setLotSize(""); setRr("2"); setRiskPct("1"); setSlPips(""); setImgBefore(null); setImgAfter(null); setShowModal(false);
   };
 
   const saveWebhook = () => {
