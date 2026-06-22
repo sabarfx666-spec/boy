@@ -42,6 +42,9 @@ export default function WeeklyModule({ weeklyPlans, setWeeklyPlans, backtestDate
   const [currentMonday, setCurrentMonday] = useState(initialMonday);
   const [discordStatus, setDiscordStatus] = useState('idle'); // idle | sending | sent | error
   const [dragOver, setDragOver] = useState(null); // 'imgBefore' | 'imgAfter' | null
+  const [webhookUrl,   setWebhookUrl]   = useState(() => localStorage.getItem('profx-weekly-webhook') ?? DISCORD_WEBHOOK ?? '');
+  const [webhookInput, setWebhookInput] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
   const [pairInput, setPairInput] = useState('');
   const [savedPairs, setSavedPairs] = useState(() => {
     try { return JSON.parse(localStorage.getItem('profx_saved_pairs')) || ['EUR/USD','GBP/USD','GBP/JPY']; } catch { return ['EUR/USD','GBP/USD','GBP/JPY']; }
@@ -160,7 +163,9 @@ export default function WeeklyModule({ weeklyPlans, setWeeklyPlans, backtestDate
       if (hasBefore) formData.append('files[0]', dataURLtoBlob(plan.imgBefore), 'before.png');
       if (hasAfter)  formData.append('files[1]', dataURLtoBlob(plan.imgAfter),  'after.png');
 
-      const res = await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
+      const url = webhookUrl || DISCORD_WEBHOOK;
+      if (!url) { setDiscordStatus('error'); setTimeout(() => setDiscordStatus('idle'), 3000); return; }
+      const res = await fetch(url, { method: 'POST', body: formData });
       if (res.ok || res.status === 204) {
         setDiscordStatus('sent');
       } else {
@@ -477,25 +482,49 @@ export default function WeeklyModule({ weeklyPlans, setWeeklyPlans, backtestDate
       </button>
 
       {/* ── Send to Discord ── */}
-      <button
-        onClick={sendToDiscord}
-        disabled={discordStatus === 'sending'}
-        className={`w-full py-3.5 rounded-xl font-black text-sm tracking-widest transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
-          discordStatus === 'sent'    ? 'bg-[rgba(0,200,150,0.12)] border-2 border-[#00c896] text-[#00c896]' :
-          discordStatus === 'error'   ? 'bg-[rgba(255,71,87,0.12)] border-2 border-[#ff4757] text-[#ff4757]' :
-          discordStatus === 'sending' ? 'border-2 border-[#5865F2] text-[#5865F2] opacity-70' :
-          'border-2 border-[#5865F2] text-[#5865F2] hover:bg-[rgba(88,101,242,0.1)]'
-        }`}
-      >
-        {/* Discord icon */}
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963.021-.04.001-.088-.041-.104a13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"/>
-        </svg>
-        {discordStatus === 'sending' ? 'Sending...' :
-         discordStatus === 'sent'    ? '✓  Sent to Discord!' :
-         discordStatus === 'error'   ? '✗  Failed — Try Again' :
-         'Send Week Summary to Discord'}
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={sendToDiscord}
+          disabled={discordStatus === 'sending'}
+          className={`flex-1 py-3.5 rounded-xl font-black text-sm tracking-widest transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
+            discordStatus === 'sent'    ? 'bg-[rgba(0,200,150,0.12)] border-2 border-[#00c896] text-[#00c896]' :
+            discordStatus === 'error'   ? 'bg-[rgba(255,71,87,0.12)] border-2 border-[#ff4757] text-[#ff4757]' :
+            discordStatus === 'sending' ? 'border-2 border-[#5865F2] text-[#5865F2] opacity-70' :
+            webhookUrl ? 'bg-[rgba(88,101,242,0.12)] border-2 border-[#5865F2] text-[#5865F2]' :
+            'border-2 border-[#5865F2] text-[#5865F2] hover:bg-[rgba(88,101,242,0.1)]'
+          }`}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963.021-.04.001-.088-.041-.104a13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"/>
+          </svg>
+          {discordStatus === 'sending' ? 'Sending...' :
+           discordStatus === 'sent'    ? '✓  Sent!' :
+           discordStatus === 'error'   ? '✗  Failed' :
+           webhookUrl ? 'Discord Connected ●' : 'Send Week Summary to Discord'}
+        </button>
+        <button onClick={() => { setWebhookInput(webhookUrl); setShowSettings(v => !v); }}
+          className="px-4 rounded-xl border-2 border-[#5865F2] text-[#5865F2] hover:bg-[rgba(88,101,242,0.1)] transition-all text-lg" title="Discord settings">⚙</button>
+      </div>
+
+      {showSettings && (
+        <div className="p-4 rounded-xl space-y-3" style={{ background: '#0f111a', border: '1px solid rgba(88,101,242,0.3)' }}>
+          <div className="text-[10px] text-[#5a5d7a] uppercase tracking-widest font-bold">Weekly Discord Webhook</div>
+          <input type="text" value={webhookInput} onChange={e => setWebhookInput(e.target.value)}
+            placeholder="https://discord.com/api/webhooks/..."
+            className="w-full bg-[#161829] border border-[#2a2d3e] text-white font-mono text-xs px-3 py-2.5 rounded-lg focus:outline-none focus:border-[#5865F2] placeholder-[#3a3d4e]" />
+          {webhookUrl && (
+            <div className="flex items-center gap-1.5 text-[10px]" style={{ color: '#00c896' }}>
+              <span>●</span><span>Webhook connected</span>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <button onClick={() => { localStorage.removeItem('profx-weekly-webhook'); setWebhookUrl(''); setWebhookInput(''); setShowSettings(false); }}
+              className="flex-1 py-2 rounded-lg text-xs font-bold text-[#5a5d7a] hover:text-white border border-[#2a2d3e] transition-colors">Clear</button>
+            <button onClick={() => { const u = webhookInput.trim(); localStorage.setItem('profx-weekly-webhook', u); setWebhookUrl(u); setShowSettings(false); }}
+              className="flex-1 py-2 rounded-lg text-xs font-bold text-white transition-colors" style={{ background: '#5865F2' }}>Save Webhook</button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
