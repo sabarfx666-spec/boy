@@ -295,6 +295,10 @@ const JournalModule = ({ setTrades, date, setDate }) => {
   const [imgAfter,    setImgAfter]    = useState(null);
   const [imgResult,   setImgResult]   = useState(null);
   const [videoUrl,    setVideoUrl]    = useState(null);
+  const [webhookUrl,  setWebhookUrl]  = useState(() => localStorage.getItem('profx-discord-webhook') ?? TRADE_WEBHOOK ?? '');
+  const [webhookInput, setWebhookInput] = useState('');
+  const [showDiscordSettings, setShowDiscordSettings] = useState(false);
+  const [discordSendStatus, setDiscordSendStatus] = useState('idle');
 
   const totalRules   = biasRules.length + entryRules.length;
   const checkedCount = biasRules.filter(r => r.checked).length + entryRules.filter(r => r.checked).length;
@@ -363,7 +367,13 @@ const JournalModule = ({ setTrades, date, setDate }) => {
     if (trade.imgBefore) formData.append('files[0]', dataURLtoBlob(trade.imgBefore), 'before.png');
     if (trade.imgAfter)  formData.append('files[1]', dataURLtoBlob(trade.imgAfter),  'after.png');
 
-    fetch(TRADE_WEBHOOK, { method: 'POST', body: formData }).catch(() => {});
+    const url = webhookUrl || TRADE_WEBHOOK;
+    if (!url) return;
+    setDiscordSendStatus('sending');
+    fetch(url, { method: 'POST', body: formData })
+      .then(() => setDiscordSendStatus('sent'))
+      .catch(() => setDiscordSendStatus('error'))
+      .finally(() => setTimeout(() => setDiscordSendStatus('idle'), 3000));
   };
 
   const handleLog = () => {
@@ -766,6 +776,59 @@ const JournalModule = ({ setTrades, date, setDate }) => {
               </span>
             </div>
           )}
+
+          {/* Connect Discord */}
+          <div className="mb-3">
+            <button
+              onClick={() => { setWebhookInput(webhookUrl); setShowDiscordSettings(v => !v); }}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all"
+              style={{
+                background: webhookUrl ? 'rgba(88,101,242,0.18)' : 'rgba(88,101,242,0.06)',
+                border: `1px solid ${webhookUrl ? '#5865F266' : 'rgba(88,101,242,0.2)'}`,
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.012.12.074.228.16.288a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                <span className="font-mono text-xs font-bold" style={{ color: '#5865F2' }}>
+                  {webhookUrl ? 'Discord Connected' : 'Connect Discord'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {discordSendStatus === 'sending' && <span className="text-[10px] text-[#5865F2] animate-pulse">Sending…</span>}
+                {discordSendStatus === 'sent'    && <span className="text-[10px] text-[#00c896]">✓ Sent</span>}
+                {discordSendStatus === 'error'   && <span className="text-[10px] text-[#ff4757]">✗ Error</span>}
+                <div className="w-2 h-2 rounded-full" style={{ background: webhookUrl ? '#5865F2' : '#2a2d3e', boxShadow: webhookUrl ? '0 0 6px 2px rgba(88,101,242,0.6)' : 'none' }} />
+                <span className="text-[#5865F2] text-xs">⚙</span>
+              </div>
+            </button>
+
+            {showDiscordSettings && (
+              <div className="mt-2 p-3 rounded-xl space-y-2" style={{ background: '#0f111a', border: '1px solid rgba(88,101,242,0.25)' }}>
+                <div className="text-[10px] text-[#5a5d7a] uppercase tracking-widest mb-1">Webhook URL</div>
+                <input
+                  type="text" value={webhookInput} onChange={e => setWebhookInput(e.target.value)}
+                  placeholder="https://discord.com/api/webhooks/..."
+                  className="w-full bg-[#161829] border border-[#2a2d3e] text-white font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[#5865F2] placeholder-[#3a3d4e]"
+                />
+                <div className="flex gap-2">
+                  <button onClick={() => { localStorage.removeItem('profx-discord-webhook'); setWebhookUrl(''); setWebhookInput(''); setShowDiscordSettings(false); }}
+                    className="flex-1 py-1.5 rounded-lg text-xs font-bold text-[#5a5d7a] hover:text-white transition-colors border border-[#2a2d3e]">
+                    Clear
+                  </button>
+                  <button onClick={() => {
+                    const url = webhookInput.trim();
+                    localStorage.setItem('profx-discord-webhook', url);
+                    setWebhookUrl(url);
+                    setShowDiscordSettings(false);
+                  }}
+                    className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white transition-colors"
+                    style={{ background: '#5865F2' }}>
+                    Save
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* 3 action buttons */}
           <div className="flex flex-col gap-2">
