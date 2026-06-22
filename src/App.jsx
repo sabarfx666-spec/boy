@@ -863,8 +863,10 @@ const JournalModule = ({ setTrades, date, setDate }) => {
 // ─── Module 2: History ────────────────────────────────────────────────────────
 
 const HistoryModule = ({ trades, setTrades }) => {
-  const [deleteId,  setDeleteId]  = useState(null);
-  const [deleteAll, setDeleteAll] = useState(false);
+  const [deleteId,   setDeleteId]   = useState(null);
+  const [deleteAll,  setDeleteAll]  = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
+  const [lightbox,   setLightbox]   = useState(null); // { src, label }
 
   const sorted = useMemo(() => [...trades].reverse(), [trades]);
 
@@ -890,6 +892,24 @@ const HistoryModule = ({ trades, setTrades }) => {
 
   return (
     <>
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setLightbox(null)}
+        >
+          <div className="relative max-w-5xl w-full" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-2 px-1">
+              <span className="text-[11px] font-black uppercase tracking-widest text-[#5a5d7a]">{lightbox.label}</span>
+              <button onClick={() => setLightbox(null)} className="text-[#5a5d7a] hover:text-white transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <img src={lightbox.src} alt={lightbox.label} className="w-full rounded-xl border border-[#2a2d3e] object-contain max-h-[80vh]" />
+          </div>
+        </div>
+      )}
+
       {/* Delete single confirm */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
@@ -963,51 +983,92 @@ const HistoryModule = ({ trades, setTrades }) => {
             </tr>
           </thead>
           <tbody>
-            {sorted.map((t, idx) => (
-              <tr
-                key={t.id}
-                className={`border-b border-[#1e2038] hover:bg-[#1e2038] transition-colors ${
-                  idx % 2 === 0 ? 'bg-[#161829]' : 'bg-[#13151f]'
-                }`}
-              >
-                <td className="px-3 py-3 font-mono text-xs text-[#6a6d8a]">{t.date}</td>
-                <td className="px-3 py-3 font-mono font-bold text-white text-xs">{t.pair}</td>
-                <td className="px-3 py-3">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                    t.direction === 'Buy'
-                      ? 'bg-[rgba(0,200,150,0.12)] text-[#00c896]'
-                      : 'bg-[rgba(255,71,87,0.12)] text-[#ff4757]'
-                  }`}>
-                    {t.direction}
-                  </span>
-                </td>
-                <td className="px-3 py-3 text-xs text-[#6a6d8a]">{t.session}</td>
-                <td className="px-3 py-3 text-xs text-[#6a6d8a] max-w-[120px] truncate">
-                  {t.psychology.length > 0 ? t.psychology.join(', ') : '—'}
-                </td>
-                <td className="px-3 py-3"><StatusBadge status={t.status} /></td>
-                <td className="px-3 py-3 font-mono text-xs text-white">1:{t.rr}</td>
-                <td className={`px-3 py-3 font-mono text-xs font-bold ${t.pnl >= 0 ? 'text-[#00c896]' : 'text-[#ff4757]'}`}>
-                  {t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}
-                </td>
-                <td className="px-3 py-3 text-xs text-[#6a6d8a] font-mono">{t.totalChecked}/{t.totalRules}</td>
-                <td className="px-3 py-3">
-                  <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
-                    t.grade === 'A+' ? 'bg-[rgba(0,200,150,0.12)] text-[#00c896]'
-                    : t.grade === 'B' ? 'bg-[rgba(245,166,35,0.12)] text-[#f5a623]'
-                    : 'bg-[rgba(255,71,87,0.12)] text-[#ff4757]'
-                  }`}>{t.grade}</span>
-                </td>
-                <td className="px-3 py-3">
-                  <button
-                    onClick={() => setDeleteId(t.id)}
-                    className="p-1.5 rounded hover:bg-[rgba(255,71,87,0.12)] text-[#3a3d4e] hover:text-[#ff4757] transition-all"
+            {sorted.map((t, idx) => {
+              const isExpanded = expandedId === t.id;
+              const hasImages  = t.imgBefore || t.imgAfter || t.imgResult;
+              const rowBg      = idx % 2 === 0 ? 'bg-[#161829]' : 'bg-[#13151f]';
+              return (
+                <React.Fragment key={t.id}>
+                  <tr
+                    onClick={() => setExpandedId(prev => prev === t.id ? null : t.id)}
+                    className={`border-b ${isExpanded ? 'border-[#2a2d3e]' : 'border-[#1e2038]'} hover:bg-[#1e2038] transition-colors cursor-pointer ${rowBg}`}
                   >
-                    <Trash2 size={13} />
-                  </button>
-                </td>
-              </tr>
-            ))}
+                    <td className="px-3 py-3 font-mono text-xs text-[#6a6d8a]">{t.date}</td>
+                    <td className="px-3 py-3 font-mono font-bold text-white text-xs">{t.pair}</td>
+                    <td className="px-3 py-3">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        t.direction === 'Buy'
+                          ? 'bg-[rgba(0,200,150,0.12)] text-[#00c896]'
+                          : 'bg-[rgba(255,71,87,0.12)] text-[#ff4757]'
+                      }`}>
+                        {t.direction}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-xs text-[#6a6d8a]">{t.session}</td>
+                    <td className="px-3 py-3 text-xs text-[#6a6d8a] max-w-[120px] truncate">
+                      {t.psychology.length > 0 ? t.psychology.join(', ') : '—'}
+                    </td>
+                    <td className="px-3 py-3"><StatusBadge status={t.status} /></td>
+                    <td className="px-3 py-3 font-mono text-xs text-white">1:{t.rr}</td>
+                    <td className={`px-3 py-3 font-mono text-xs font-bold ${t.pnl >= 0 ? 'text-[#00c896]' : 'text-[#ff4757]'}`}>
+                      {t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}
+                    </td>
+                    <td className="px-3 py-3 text-xs text-[#6a6d8a] font-mono">{t.totalChecked}/{t.totalRules}</td>
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
+                          t.grade === 'A+' ? 'bg-[rgba(0,200,150,0.12)] text-[#00c896]'
+                          : t.grade === 'B' ? 'bg-[rgba(245,166,35,0.12)] text-[#f5a623]'
+                          : 'bg-[rgba(255,71,87,0.12)] text-[#ff4757]'
+                        }`}>{t.grade}</span>
+                        {hasImages && <span className="text-[11px]" title="Has screenshots">📸</span>}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3">
+                      <button
+                        onClick={e => { e.stopPropagation(); setDeleteId(t.id); }}
+                        className="p-1.5 rounded hover:bg-[rgba(255,71,87,0.12)] text-[#3a3d4e] hover:text-[#ff4757] transition-all"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr className={rowBg}>
+                      <td colSpan="11" className="px-4 pb-4 pt-2">
+                        {hasImages ? (
+                          <div className="flex gap-3 flex-wrap">
+                            {[
+                              { label: 'BEFORE', img: t.imgBefore, color: '#4a90d9' },
+                              { label: 'AFTER',  img: t.imgAfter,  color: '#00c896' },
+                              { label: 'RESULT', img: t.imgResult, color: '#f5a623' },
+                            ].filter(s => s.img).map(({ label, img, color }) => (
+                              <div key={label} className="flex flex-col gap-1">
+                                <div className="text-[9px] font-black uppercase tracking-widest text-center" style={{ color }}>{label}</div>
+                                <div
+                                  className="relative group cursor-zoom-in"
+                                  onClick={e => { e.stopPropagation(); setLightbox({ src: img, label }); }}
+                                >
+                                  <img src={img} alt={label}
+                                    className="rounded-lg border border-[#2a2d3e] object-cover transition-all group-hover:border-[#4a90d9] group-hover:brightness-90"
+                                    style={{ maxHeight: 180, maxWidth: 280 }}
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                    <div className="bg-black/60 rounded-lg px-2 py-1 text-[10px] text-white font-bold">🔍 View</div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-[10px] text-[#3a3d4e] italic py-1">No chart screenshots attached to this trade.</div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -1038,6 +1099,39 @@ const AnalyticsModule = ({ trades, backtestDate }) => {
     { name: 'Buy',  value: buys,  color: '#00c896' },
     { name: 'Sell', value: sells, color: '#ff4757' },
   ].filter(d => d.value > 0);
+
+  // Session breakdown
+  const sessionStats = ['London', 'New York'].reduce((acc, s) => {
+    const st = trades.filter(t => t.session === s);
+    const active = st.filter(t => t.status !== 'No Trade');
+    acc[s] = {
+      total:   st.length,
+      wins:    st.filter(t => t.status === 'Win').length,
+      losses:  st.filter(t => t.status === 'Loss').length,
+      be:      st.filter(t => t.status === 'Break Even').length,
+      nt:      st.filter(t => t.status === 'No Trade').length,
+      pnl:     st.reduce((s, t) => s + t.pnl, 0),
+      winRate: active.length > 0 ? Math.round((st.filter(t => t.status === 'Win').length / active.length) * 100) : 0,
+    };
+    return acc;
+  }, {});
+
+  // Day of week breakdown
+  const DOW_MAP = { 1:'Mon', 2:'Tue', 3:'Wed', 4:'Thu', 5:'Fri' };
+  const dayStats = ['Mon','Tue','Wed','Thu','Fri'].reduce((acc, d) => {
+    acc[d] = { total:0, wins:0, losses:0, be:0, pnl:0 };
+    return acc;
+  }, {});
+  trades.forEach(t => {
+    const dow = new Date(t.date + 'T12:00:00').getDay();
+    const key = DOW_MAP[dow];
+    if (!key) return;
+    dayStats[key].total++;
+    if (t.status === 'Win')         dayStats[key].wins++;
+    else if (t.status === 'Loss')   dayStats[key].losses++;
+    else if (t.status === 'Break Even') dayStats[key].be++;
+    dayStats[key].pnl += t.pnl;
+  });
 
   // Calendar — default to backtest date, then latest trade, then today
   const defaultCalDate = (() => {
@@ -1171,6 +1265,92 @@ const AnalyticsModule = ({ trades, backtestDate }) => {
             </PieChart>
           </ResponsiveContainer>
         </Card>
+      </div>
+
+      {/* Session & Day of Week */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        {/* Session Performance */}
+        <Card>
+          <Label>Session Performance</Label>
+          <div className="flex flex-col gap-3">
+            {['London', 'New York'].map(session => {
+              const s = sessionStats[session];
+              const pnlColor = s.pnl >= 0 ? '#00c896' : '#ff4757';
+              return (
+                <div key={session} className="p-3 rounded-xl bg-[#0f111a] border border-[#2a2d3e]">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{session === 'London' ? '🇬🇧' : '🇺🇸'}</span>
+                      <span className="text-xs font-bold text-white">{session}</span>
+                      <span className="text-[9px] text-[#5a5d7a] font-mono">{s.total} trade{s.total !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-black font-mono" style={{ color: pnlColor }}>{s.pnl >= 0 ? '+' : ''}${s.pnl.toFixed(2)}</span>
+                      <span className="text-[10px] font-bold text-[#4a90d9]">{s.winRate}% WR</span>
+                    </div>
+                  </div>
+                  <div className="flex h-2 rounded-full overflow-hidden mb-2 bg-[#1e2038]">
+                    {s.wins   > 0 && <div style={{ flex: s.wins,   background: '#00c896' }} />}
+                    {s.losses > 0 && <div style={{ flex: s.losses, background: '#ff4757' }} />}
+                    {s.be     > 0 && <div style={{ flex: s.be,     background: '#f5a623' }} />}
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="text-[9px] text-[#00c896] font-bold">✅ {s.wins} Win</span>
+                    <span className="text-[9px] text-[#ff4757] font-bold">❌ {s.losses} Loss</span>
+                    {s.be > 0 && <span className="text-[9px] text-[#f5a623] font-bold">➖ {s.be} BE</span>}
+                    {s.nt > 0 && <span className="text-[9px] text-[#8888aa] font-bold">🚫 {s.nt} NT</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        {/* Day of Week */}
+        <Card>
+          <Label>Day of Week</Label>
+          <div className="flex flex-col gap-2.5">
+            {['Mon','Tue','Wed','Thu','Fri'].map(day => {
+              const d = dayStats[day];
+              const active = d.wins + d.losses + d.be;
+              const wr = active > 0 ? Math.round((d.wins / active) * 100) : 0;
+              const pnlColor = d.pnl > 0 ? '#00c896' : d.pnl < 0 ? '#ff4757' : '#5a5d7a';
+              const DAY_FULL = { Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday' };
+              return (
+                <div key={day} className="flex items-center gap-3">
+                  <div className="text-[10px] font-bold text-[#5a5d7a] w-8 flex-shrink-0">{day}</div>
+                  <div className="flex-1 h-6 bg-[#0f111a] rounded-lg overflow-hidden flex">
+                    {d.total === 0
+                      ? <div className="flex-1 flex items-center px-2"><span className="text-[9px] text-[#2a2d3e]">No trades</span></div>
+                      : <>
+                          {d.wins   > 0 && <div title={`${d.wins} Win`}   style={{ flex: d.wins,   background: 'rgba(0,200,150,0.55)' }} className="flex items-center justify-center text-[9px] font-black text-[#00c896]">{d.wins}</div>}
+                          {d.losses > 0 && <div title={`${d.losses} Loss`} style={{ flex: d.losses, background: 'rgba(255,71,87,0.55)'  }} className="flex items-center justify-center text-[9px] font-black text-[#ff4757]">{d.losses}</div>}
+                          {d.be     > 0 && <div title={`${d.be} BE`}      style={{ flex: d.be,     background: 'rgba(245,166,35,0.55)' }} className="flex items-center justify-center text-[9px] font-black text-[#f5a623]">{d.be}</div>}
+                        </>
+                    }
+                  </div>
+                  <div className="text-[9px] font-mono font-bold w-14 text-right" style={{ color: pnlColor }}>
+                    {d.total > 0 ? `${d.pnl >= 0 ? '+' : ''}$${d.pnl.toFixed(0)}` : '—'}
+                  </div>
+                  <div className="text-[9px] font-bold w-9 text-right text-[#4a90d9]">
+                    {d.total > 0 ? `${wr}%` : '—'}
+                  </div>
+                </div>
+              );
+            })}
+            <div className="flex gap-3 mt-1 pt-2 border-t border-[#1e2038] flex-wrap">
+              {[['#00c896','Win'],['#ff4757','Loss'],['#f5a623','BE']].map(([c,l]) => (
+                <div key={l} className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-sm" style={{ background: c + '99' }} />
+                  <span className="text-[9px] text-[#5a5d7a]">{l}</span>
+                </div>
+              ))}
+              <span className="ml-auto text-[9px] text-[#3a3d4e]">P&L · WR%</span>
+            </div>
+          </div>
+        </Card>
+
       </div>
 
       {/* Performance Calendar */}
