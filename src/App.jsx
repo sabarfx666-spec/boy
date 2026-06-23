@@ -36,6 +36,10 @@ const DEFAULT_ENTRY_RULES = [
 const DEFAULT_PAIRS = ['EUR/USD', 'GBP/USD', 'GBP/JPY'];
 const TRADE_WEBHOOK = import.meta.env.VITE_DISCORD_TRADE;
 const SESSIONS = ['London', 'New York'];
+const SESSION_TIMES = {
+  'London':   { hours: ['2.00','3.00','4.00','5.00'],   period: 'PM', color: '#ff6b81' },
+  'New York': { hours: ['7.00','8.00','9.00','10.00'],  period: 'AM', color: '#ffa502' },
+};
 const BIASES = ['Bullish', 'Bearish'];
 const PSYCH_TAGS = ['Calm', 'Confident', 'Focused', 'FOMO', 'Fear', 'Greed', 'Anxious', 'Impatient'];
 
@@ -278,6 +282,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
   useEffect(() => { localStorage.setItem('profx_locked_years', JSON.stringify(lockedYears)); }, [lockedYears]);
   const [bias,        setBias]        = useState(null);
   const [session,     setSession]     = useState(null);
+  const [tradeTime,   setTradeTime]   = useState(null);
   const [pair,        setPair]        = useState('EUR/USD');
   const [pairInput,   setPairInput]   = useState('');
   const [savedPairs,  setSavedPairs]  = useState(() => load('profx_saved_pairs', DEFAULT_PAIRS));
@@ -320,7 +325,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
     setPsych(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
 
   const resetForm = () => {
-    setBias(null); setSession(null); setPair('EUR/USD'); setPairInput('');
+    setBias(null); setSession(null); setTradeTime(null); setPair('EUR/USD'); setPairInput('');
     setBiasRules(prev => prev.map(r => ({ ...r, checked: false })));
     setEntryRules(prev => prev.map(r => ({ ...r, checked: false })));
     setPsych([]); setRiskAmt(''); setSl(''); setRr(''); setOutcome(null);
@@ -394,7 +399,8 @@ const JournalModule = ({ setTrades, date, setDate }) => {
       id: Date.now(),
       date, pair, bias,
       direction: bias === 'Bullish' ? 'Buy' : 'Sell',
-      session, psychology: [...psych],
+      session, tradeTime: tradeTime ? `${tradeTime} ${SESSION_TIMES[session]?.period ?? ''}`.trim() : null,
+      psychology: [...psych],
       riskAmt: +riskAmt || 0, sl: +sl || 0, lotSize: +lotSize,
       rr: +rr, status: outcome, pnl,
       biasChecked: biasRules.filter(r => r.checked).length,
@@ -559,7 +565,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
             <div className="grid grid-cols-2 gap-2">
               {SESSIONS.map(s => (
                 <button
-                  key={s} onClick={() => setSession(s)}
+                  key={s} onClick={() => { setSession(s); setTradeTime(null); }}
                   className={`py-2.5 rounded-lg text-sm font-semibold transition-all ${
                     session === s
                       ? 'bg-[#4a90d9] text-white shadow-lg shadow-[rgba(74,144,217,0.3)]'
@@ -570,6 +576,24 @@ const JournalModule = ({ setTrades, date, setDate }) => {
                 </button>
               ))}
             </div>
+            {session && (
+              <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0f111a] border border-[#2a2d3e]">
+                {SESSION_TIMES[session].hours.map(h => (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => setTradeTime(tradeTime === h ? null : h)}
+                    className="text-sm font-mono font-black px-2 py-0.5 rounded-md transition-all"
+                    style={{
+                      color: SESSION_TIMES[session].color,
+                      background: tradeTime === h ? SESSION_TIMES[session].color + '33' : 'transparent',
+                      border: tradeTime === h ? `1px solid ${SESSION_TIMES[session].color}` : '1px solid transparent',
+                    }}
+                  >{h}</button>
+                ))}
+                <span className="text-xs font-black ml-1" style={{ color: SESSION_TIMES[session].color }}>{SESSION_TIMES[session].period}</span>
+              </div>
+            )}
           </div>
 
           {/* Pair */}
@@ -1051,7 +1075,10 @@ const HistoryModule = ({ trades, setTrades }) => {
                         {t.direction}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-xs text-[#6a6d8a]">{t.session}</td>
+                    <td className="px-3 py-3 text-xs text-[#6a6d8a]">
+                      <div>{t.session}</div>
+                      {t.tradeTime && <div className="text-[10px] font-mono font-bold" style={{ color: t.session === 'London' ? '#ff6b81' : '#ffa502' }}>{t.tradeTime}</div>}
+                    </td>
                     <td className="px-3 py-3 text-xs text-[#6a6d8a] max-w-[120px] truncate">
                       {t.psychology.length > 0 ? t.psychology.join(', ') : '—'}
                     </td>
