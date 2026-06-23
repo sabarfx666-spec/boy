@@ -10,6 +10,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts';
 import WeeklyModule from './WeeklyModule.jsx';
+import { imgSave, imgLoadTrade, imgDeleteTrade } from './db.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -403,6 +404,10 @@ const JournalModule = ({ setTrades, date, setDate }) => {
       imgBefore, imgAfter, imgResult,
     };
     setTrades(prev => [...prev, trade]);
+    // Persist images to IndexedDB (no size limit) separate from localStorage
+    imgSave(`${trade.id}_before`, imgBefore);
+    imgSave(`${trade.id}_after`,  imgAfter);
+    imgSave(`${trade.id}_result`, imgResult);
     postTradeToDiscord(trade);
     showToast(`✓ Trade logged — ${pair} ${outcome} | 1:${rr} | Grade ${grade.label}`);
     resetForm();
@@ -424,6 +429,9 @@ const JournalModule = ({ setTrades, date, setDate }) => {
       imgBefore, imgAfter, imgResult,
     };
     setTrades(prev => [...prev, trade]);
+    imgSave(`${trade.id}_before`, imgBefore);
+    imgSave(`${trade.id}_after`,  imgAfter);
+    imgSave(`${trade.id}_result`, imgResult);
     postTradeToDiscord(trade);
     showToast(`🚫 No Trade logged — ${pair} ${date}`, '#f5a623');
     resetForm();
@@ -881,19 +889,39 @@ const JournalModule = ({ setTrades, date, setDate }) => {
 // ─── Module 2: History ────────────────────────────────────────────────────────
 
 const HistoryModule = ({ trades, setTrades }) => {
-  const [deleteId,   setDeleteId]   = useState(null);
-  const [deleteAll,  setDeleteAll]  = useState(false);
-  const [expandedId, setExpandedId] = useState(null);
-  const [lightbox,   setLightbox]   = useState(null); // { src, label }
+  const [deleteId,    setDeleteId]    = useState(null);
+  const [deleteAll,   setDeleteAll]   = useState(false);
+  const [expandedId,  setExpandedId]  = useState(null);
+  const [lightbox,    setLightbox]    = useState(null);
+  const [idbImages,   setIdbImages]   = useState({}); // { [tradeId]: {before,after,result} }
 
   const sorted = useMemo(() => [...trades].reverse(), [trades]);
 
+  // Load images from IndexedDB when a row is expanded and images aren't in memory
+  const handleExpand = (t) => {
+    const next = expandedId === t.id ? null : t.id;
+    setExpandedId(next);
+    if (next && !idbImages[t.id] && !t.imgBefore && !t.imgAfter && !t.imgResult) {
+      imgLoadTrade(t.id).then(imgs => {
+        if (imgs.before || imgs.after || imgs.result)
+          setIdbImages(prev => ({ ...prev, [t.id]: imgs }));
+      }).catch(() => {});
+    }
+  };
+
+  const getImg = (t, slot) =>
+    t[`img${slot.charAt(0).toUpperCase()}${slot.slice(1)}`] ||
+    idbImages[t.id]?.[slot] ||
+    null;
+
   const confirmDelete = () => {
+    imgDeleteTrade(deleteId);
     setTrades(prev => prev.filter(t => t.id !== deleteId));
     setDeleteId(null);
   };
 
   const confirmDeleteAll = () => {
+    trades.forEach(t => imgDeleteTrade(t.id));
     setTrades([]);
     setDeleteAll(false);
   };
@@ -1003,12 +1031,12 @@ const HistoryModule = ({ trades, setTrades }) => {
           <tbody>
             {sorted.map((t, idx) => {
               const isExpanded = expandedId === t.id;
-              const hasImages  = t.imgBefore || t.imgAfter || t.imgResult;
+              const hasImages  = t.imgBefore || t.imgAfter || t.imgResult || idbImages[t.id]?.before || idbImages[t.id]?.after || idbImages[t.id]?.result;
               const rowBg      = idx % 2 === 0 ? 'bg-[#161829]' : 'bg-[#13151f]';
               return (
                 <React.Fragment key={t.id}>
                   <tr
-                    onClick={() => setExpandedId(prev => prev === t.id ? null : t.id)}
+                    onClick={() => handleExpand(t)}
                     className={`border-b ${isExpanded ? 'border-[#2a2d3e]' : 'border-[#1e2038]'} hover:bg-[#1e2038] transition-colors cursor-pointer ${rowBg}`}
                   >
                     <td className="px-3 py-3 font-mono text-xs text-[#6a6d8a]">{t.date}</td>
@@ -1057,9 +1085,9 @@ const HistoryModule = ({ trades, setTrades }) => {
                         {hasImages ? (
                           <div className="flex gap-3 flex-wrap">
                             {[
-                              { label: 'BEFORE', img: t.imgBefore, color: '#4a90d9' },
-                              { label: 'AFTER',  img: t.imgAfter,  color: '#00c896' },
-                              { label: 'RESULT', img: t.imgResult, color: '#f5a623' },
+                              { label: 'BEFORE', img: getImg(t, 'before'), color: '#4a90d9' },
+                              { label: 'AFTER',  img: getImg(t, 'after'),  color: '#00c896' },
+                              { label: 'RESULT', img: getImg(t, 'result'), color: '#f5a623' },
                             ].filter(s => s.img).map(({ label, img, color }) => (
                               <div key={label} className="flex flex-col gap-1">
                                 <div className="text-[9px] font-black uppercase tracking-widest text-center" style={{ color }}>{label}</div>
