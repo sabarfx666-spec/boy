@@ -15,22 +15,42 @@ import { imgSave, imgLoadTrade, imgDeleteTrade } from './db.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const DEFAULT_BIAS_RULES = [
-  { id: 'b1', text: 'Daily orderflow DOLx', checked: false },
-  { id: 'b2', text: 'HTF premium / discount zone', checked: false },
-  { id: 'b3', text: 'Weekly bias confirmed', checked: false },
-  { id: 'b4', text: '4H market structure aligned', checked: false },
-  { id: 'b5', text: 'Dealing range identified', checked: false },
-  { id: 'b6', text: 'Asia high / low mapped', checked: false },
+const DEFAULT_BULL_BIAS = [
+  { id: 'bb1', text: 'Daily Bullish Order-flow +DOL',          checked: false },
+  { id: 'bb2', text: 'Daily Order-flow +ICR',                  checked: false, group: 'bbg1' },
+  { id: 'bb3', text: 'Daily Order-flow +CRT',                  checked: false, group: 'bbg1' },
+  { id: 'bb4', text: 'Monday Up rule',                         checked: false },
+  { id: 'bb5', text: '4H Bullish A to B + POI+ ERL',          checked: false, group: 'bbg2' },
+  { id: 'bb6', text: 'A to B +LQ:Engineering+ POI+ ERL',      checked: false, group: 'bbg2' },
+  { id: 'bb7', text: '4H Bullish Order-flow +CRT',             checked: false },
 ];
 
-const DEFAULT_ENTRY_RULES = [
-  { id: 'e1', text: '15M orderflow + POI', checked: false },
-  { id: 'e2', text: 'Order block identified', checked: false },
-  { id: 'e3', text: 'Fair value gap present', checked: false },
-  { id: 'e4', text: 'Liquidity sweep confirmed', checked: false },
-  { id: 'e5', text: 'M5 confirmation entry', checked: false },
-  { id: 'e6', text: 'SL placed beyond structure', checked: false },
+const DEFAULT_BEAR_BIAS = [
+  { id: 'rb1', text: 'Daily Bearish Order-flow +DOL',          checked: false },
+  { id: 'rb2', text: 'Daily Bearish Order-flow +ICR',          checked: false, group: 'rbg1' },
+  { id: 'rb3', text: 'Daily Bearish Order-flow +CRT',          checked: false, group: 'rbg1' },
+  { id: 'rb4', text: 'Monday Down rule',                       checked: false },
+  { id: 'rb5', text: '4H Bearish A to B + POI+ ERL',          checked: false, group: 'rbg2' },
+  { id: 'rb6', text: 'A to B +LQ:Engineering+ POI+ ERL',      checked: false, group: 'rbg2' },
+  { id: 'rb7', text: '4H Bearish Order-flow +CRT',             checked: false },
+];
+
+const DEFAULT_BULL_ENTRY = [
+  { id: 'be1', text: '15M Bullish Order-flow + POI',           checked: false },
+  { id: 'be2', text: 'Bullish Order block + MSS',              checked: false, group: 'beg1' },
+  { id: 'be3', text: 'Bullish Fair value gap present',         checked: false, group: 'beg1' },
+  { id: 'be4', text: 'Downside liquidity sweep confirmed',     checked: false },
+  { id: 'be5', text: 'M5 Buy confirmation entry',              checked: false },
+  { id: 'be6', text: 'SL placed below structure',              checked: false },
+];
+
+const DEFAULT_BEAR_ENTRY = [
+  { id: 're1', text: '15M Bearish Order-flow + POI',           checked: false },
+  { id: 're2', text: 'Bearish Order block + MSS',              checked: false, group: 'reg1' },
+  { id: 're3', text: 'Bearish Fair value gap present',         checked: false, group: 'reg1' },
+  { id: 're4', text: 'Upside liquidity sweep confirmed',       checked: false },
+  { id: 're5', text: 'M5 Sell confirmation entry',             checked: false },
+  { id: 're6', text: 'SL placed above structure',              checked: false },
 ];
 
 const DEFAULT_PAIRS = ['EUR/USD', 'GBP/USD', 'GBP/JPY'];
@@ -51,9 +71,10 @@ const calcLotSize = (risk, sl) => {
 };
 
 const calcGrade = (pct) => {
-  if (pct >= 80) return { label: 'A+', color: '#00c896', ring: 'rgba(0,200,150,0.4)', bg: 'rgba(0,200,150,0.08)' };
-  if (pct >= 60) return { label: 'B',  color: '#f5a623', ring: 'rgba(245,166,35,0.4)', bg: 'rgba(245,166,35,0.08)' };
-  return              { label: 'C',  color: '#ff4757', ring: 'rgba(255,71,87,0.4)',  bg: 'rgba(255,71,87,0.08)'  };
+  if (pct >= 85) return { label: 'A+', color: '#00c896', ring: 'rgba(0,200,150,0.4)', bg: 'rgba(0,200,150,0.08)' };
+  if (pct >= 70) return { label: 'B',  color: '#f5a623', ring: 'rgba(245,166,35,0.4)', bg: 'rgba(245,166,35,0.08)' };
+  if (pct >= 50) return { label: 'C',  color: '#f59e0b', ring: 'rgba(245,158,11,0.4)',  bg: 'rgba(245,158,11,0.08)'  };
+  return              { label: 'F',  color: '#ff4757', ring: 'rgba(255,71,87,0.4)',  bg: 'rgba(255,71,87,0.08)'  };
 };
 
 const calcPnL = (status, risk, rr) => {
@@ -91,7 +112,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// ─── Rule helpers (module-level so RuleList is a stable component reference) ──
+// ─── Rule helpers ─────────────────────────────────────────────────────────────
 
 const toggleRule = (setter, id) =>
   setter(prev => prev.map(r => r.id === id ? { ...r, checked: !r.checked } : r));
@@ -104,59 +125,131 @@ const addRule = (setter, text, clearFn) => {
 
 const removeRule = (setter, id) => setter(prev => prev.filter(r => r.id !== id));
 
-const RuleList = ({ rules, setter, newVal, setNew, label }) => (
-  <Card>
-    <div className="flex items-center justify-between mb-3">
-      <Label>{label}</Label>
-      <span className="text-[10px] text-[#5a5d7a] font-mono">
-        {rules.filter(r => r.checked).length}/{rules.length}
-      </span>
-    </div>
-    <div className="flex flex-col gap-1.5 mb-3">
-      {rules.map(rule => (
-        <div key={rule.id} className="flex items-center gap-2 group">
-          <button
-            onClick={() => toggleRule(setter, rule.id)}
-            className={`flex items-center gap-2.5 flex-1 p-2.5 rounded-lg text-sm text-left transition-all ${
-              rule.checked
-                ? 'bg-[rgba(0,200,150,0.08)] border border-[rgba(0,200,150,0.25)] text-[#00c896]'
-                : 'bg-[#0f111a] border border-[#2a2d3e] text-[#8888aa] hover:border-[#4a4d5e]'
-            }`}
-          >
-            <span className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all ${
-              rule.checked ? 'bg-[#00c896] border-[#00c896]' : 'border-[#3a3d4e]'
-            }`}>
-              {rule.checked && <Check size={10} className="text-black" strokeWidth={3} />}
-            </span>
-            {rule.text}
-          </button>
-          <button
-            onClick={() => removeRule(setter, rule.id)}
-            className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 rounded text-[#ff4757] hover:bg-[rgba(255,71,87,0.1)] transition-all"
-          >
-            <X size={12} />
-          </button>
-        </div>
-      ))}
-    </div>
-    <div className="flex gap-2">
-      <input
-        type="text"
-        placeholder="Add rule..."
-        value={newVal}
-        onChange={e => setNew(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && addRule(setter, newVal, setNew)}
-        className="flex-1 bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-1.5 text-xs text-white placeholder-[#4a4d5e] focus:outline-none focus:border-[#4a90d9]"
-      />
+// Build display segments: standalone rules + grouped brackets
+const buildSegments = (rules) => {
+  const segments = [];
+  let i = 0;
+  while (i < rules.length) {
+    const r = rules[i];
+    if (r.group) {
+      const group = [];
+      let j = i;
+      while (j < rules.length && rules[j].group === r.group) { group.push(rules[j]); j++; }
+      segments.push({ type: 'group', group: r.group, rules: group });
+      i = j;
+    } else {
+      segments.push({ type: 'single', rule: r });
+      i++;
+    }
+  }
+  return segments;
+};
+
+const RuleSection = ({ rules, setter, newVal, setNew, label, subtitle, expanded, onToggle }) => {
+  const rawChecked = rules.filter(r => r.checked).length;
+
+  const renderRule = (rule, isGrouped) => (
+    <div key={rule.id} className="flex items-center gap-2 group/rule">
       <button
-        onClick={() => addRule(setter, newVal, setNew)}
-        className="px-3 rounded-lg bg-[#2a2d3e] hover:bg-[#3a3d4e] text-[#8888aa] hover:text-white transition-all"
+        onClick={() => toggleRule(setter, rule.id)}
+        className="flex items-center gap-3 flex-1 px-3 py-2.5 rounded-lg text-left transition-all"
+        style={rule.checked ? {
+          background: 'rgba(0,200,150,0.05)', border: '1px solid rgba(0,200,150,0.12)',
+        } : { background: 'transparent', border: '1px solid transparent' }}
       >
-        <Plus size={14} />
+        {/* Radio circle */}
+        <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+          rule.checked ? 'border-[#00c896]' : 'border-[#2e3244]'
+        }`}>
+          {rule.checked && <div className="w-2 h-2 rounded-full bg-[#00c896]" />}
+        </div>
+        <span className={`flex-1 text-xs font-medium transition-all ${rule.checked ? 'text-[#00c896]' : 'text-[#7a7d9a]'}`}>
+          {rule.text}
+        </span>
+        {isGrouped && (
+          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide flex-shrink-0"
+            style={{ background: 'rgba(0,200,150,0.08)', color: '#00c896', border: '1px solid rgba(0,200,150,0.2)' }}>
+            Either/Or
+          </span>
+        )}
+      </button>
+      <button
+        onClick={() => removeRule(setter, rule.id)}
+        className="opacity-0 group-hover/rule:opacity-100 flex-shrink-0 p-1 rounded text-[#ff4757] hover:bg-[rgba(255,71,87,0.1)] transition-all"
+      >
+        <X size={11} />
       </button>
     </div>
-  </Card>
-);
+  );
+
+  const segments = buildSegments(rules);
+
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ background: '#0d0f18', border: '1px solid #1a1d2e' }}>
+      {/* Header */}
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-4 py-3.5 transition-all hover:bg-[rgba(255,255,255,0.02)]"
+      >
+        <div className="flex items-center gap-2.5">
+          <ChevronDown size={13} className="text-[#00c896] transition-transform duration-200 flex-shrink-0"
+            style={{ transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
+          <span className="text-sm font-black font-mono tracking-wide text-white">{label}</span>
+        </div>
+        <span className="text-xs font-mono font-bold text-[#00c896]">{rawChecked}/{rules.length}</span>
+      </button>
+
+      {expanded && (
+        <>
+          {/* Subtitle + divider */}
+          <div className="px-4">
+            <div className="text-[9px] font-mono font-bold tracking-[0.2em] text-[#2e3a3a] uppercase mb-3">{subtitle}</div>
+            <div className="h-px mb-3" style={{ background: '#1a1d2e' }} />
+          </div>
+
+          {/* Rules */}
+          <div className="px-4 pb-3 flex flex-col gap-1">
+            {segments.map((seg, si) =>
+              seg.type === 'single' ? renderRule(seg.rule, false) : (
+                <div key={seg.group} className="flex gap-0">
+                  {/* Left bracket */}
+                  <div className="flex flex-col items-center flex-shrink-0" style={{ width: 14, marginRight: 4 }}>
+                    <div style={{ width: 8, height: 12, borderTop: '2px solid #1e3a35', borderLeft: '2px solid #1e3a35', borderRadius: '3px 0 0 0', marginTop: 10 }} />
+                    <div style={{ width: 2, flex: 1, background: '#1e3a35' }} />
+                    <div style={{ width: 8, height: 12, borderBottom: '2px solid #1e3a35', borderLeft: '2px solid #1e3a35', borderRadius: '0 0 0 3px', marginBottom: 10 }} />
+                  </div>
+                  <div className="flex-1 flex flex-col gap-1">
+                    {seg.rules.map(r => renderRule(r, true))}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+
+          {/* Add Rule */}
+          <div className="px-4 pb-3 pt-2" style={{ borderTop: '1px solid #1a1d2e' }}>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="+ Add Rule"
+                value={newVal}
+                onChange={e => setNew(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addRule(setter, newVal, setNew)}
+                className="flex-1 bg-transparent text-[#5a6a6a] text-xs placeholder-[#2e3a3a] focus:outline-none"
+              />
+              {newVal && (
+                <button onClick={() => addRule(setter, newVal, setNew)}
+                  className="text-[#00c896] text-xs font-bold hover:opacity-80 transition-all">
+                  Add
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 const ImageSlot = ({ label, value, onChange }) => {
   const fileRef = useRef(null);
@@ -287,12 +380,26 @@ const JournalModule = ({ setTrades, date, setDate }) => {
   const [pairInput,   setPairInput]   = useState('');
   const [savedPairs,  setSavedPairs]  = useState(() => load('profx_saved_pairs', DEFAULT_PAIRS));
   useEffect(() => { localStorage.setItem('profx_saved_pairs', JSON.stringify(savedPairs)); }, [savedPairs]);
-  const [biasRules,   setBiasRules]   = useState(() => load('profx_bias_rules',  DEFAULT_BIAS_RULES.map(r => ({ ...r }))));
-  const [entryRules,  setEntryRules]  = useState(() => load('profx_entry_rules', DEFAULT_ENTRY_RULES.map(r => ({ ...r }))));
-  useEffect(() => { localStorage.setItem('profx_bias_rules',   JSON.stringify(biasRules));    }, [biasRules]);
-  useEffect(() => { localStorage.setItem('profx_entry_rules',  JSON.stringify(entryRules));   }, [entryRules]);
+  const [bullBiasRules,  setBullBiasRules]  = useState(() => load('profx_bull_bias',  DEFAULT_BULL_BIAS.map(r => ({ ...r }))));
+  const [bearBiasRules,  setBearBiasRules]  = useState(() => load('profx_bear_bias',  DEFAULT_BEAR_BIAS.map(r => ({ ...r }))));
+  const [bullEntryRules, setBullEntryRules] = useState(() => load('profx_bull_entry', DEFAULT_BULL_ENTRY.map(r => ({ ...r }))));
+  const [bearEntryRules, setBearEntryRules] = useState(() => load('profx_bear_entry', DEFAULT_BEAR_ENTRY.map(r => ({ ...r }))));
+  useEffect(() => { localStorage.setItem('profx_bull_bias',  JSON.stringify(bullBiasRules));  }, [bullBiasRules]);
+  useEffect(() => { localStorage.setItem('profx_bear_bias',  JSON.stringify(bearBiasRules));  }, [bearBiasRules]);
+  useEffect(() => { localStorage.setItem('profx_bull_entry', JSON.stringify(bullEntryRules)); }, [bullEntryRules]);
+  useEffect(() => { localStorage.setItem('profx_bear_entry', JSON.stringify(bearEntryRules)); }, [bearEntryRules]);
+
+  // Active rules depend on selected bias (default to bullish before selection)
+  const isBear = bias === 'Bearish';
+  const biasRules      = isBear ? bearBiasRules  : bullBiasRules;
+  const setBiasRules   = isBear ? setBearBiasRules  : setBullBiasRules;
+  const entryRules     = isBear ? bearEntryRules : bullEntryRules;
+  const setEntryRules  = isBear ? setBearEntryRules : setBullEntryRules;
+
   const [newBiasRule, setNewBiasRule] = useState('');
   const [newEntRule,  setNewEntRule]  = useState('');
+  const [htfExpanded, setHtfExpanded] = useState(true);
+  const [ltfExpanded, setLtfExpanded] = useState(true);
   const [psych,       setPsych]       = useState([]);
   const [riskAmt,     setRiskAmt]     = useState('');
   const [sl,          setSl]          = useState('');
@@ -326,8 +433,10 @@ const JournalModule = ({ setTrades, date, setDate }) => {
 
   const resetForm = () => {
     setBias(null); setSession(null); setTradeTime(null); setPair('EUR/USD'); setPairInput('');
-    setBiasRules(prev => prev.map(r => ({ ...r, checked: false })));
-    setEntryRules(prev => prev.map(r => ({ ...r, checked: false })));
+    setBullBiasRules(prev => prev.map(r => ({ ...r, checked: false })));
+    setBearBiasRules(prev => prev.map(r => ({ ...r, checked: false })));
+    setBullEntryRules(prev => prev.map(r => ({ ...r, checked: false })));
+    setBearEntryRules(prev => prev.map(r => ({ ...r, checked: false })));
     setPsych([]); setRiskAmt(''); setSl(''); setRr(''); setOutcome(null);
     setImgBefore(null); setImgAfter(null); setImgResult(null); setVideoUrl(null);
     // Advance date by 1 day so backtesting flows forward automatically
@@ -651,15 +760,34 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           </div>
         </Card>
 
-        <RuleList
+        {/* Score bar */}
+        <div className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: '#0d0f18', border: '1px solid #1a1d2e' }}>
+          <span className="text-xs text-[#3e4255] font-mono">{checkedCount}/{totalRules} rules</span>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <div className="text-base font-black font-mono leading-none" style={{ color: grade.color }}>{pct}%</div>
+              <div className="text-[9px] font-mono tracking-widest uppercase mt-0.5" style={{ color: '#3e4255' }}>Completion</div>
+            </div>
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-base font-black font-mono"
+              style={{ background: grade.bg, border: `2px solid ${grade.color}`, color: grade.color }}>
+              {grade.label}
+            </div>
+          </div>
+        </div>
+
+        <RuleSection
           rules={biasRules} setter={setBiasRules}
           newVal={newBiasRule} setNew={setNewBiasRule}
-          label="Rules — Bias"
+          label="HTF Bias"
+          subtitle="Daily & 4-Hour Timeframe"
+          expanded={htfExpanded} onToggle={() => setHtfExpanded(v => !v)}
         />
-        <RuleList
+        <RuleSection
           rules={entryRules} setter={setEntryRules}
           newVal={newEntRule} setNew={setNewEntRule}
-          label="Rules — Entry"
+          label="LTF Entry"
+          subtitle="15-Minute & 1-Hour Timeframe"
+          expanded={ltfExpanded} onToggle={() => setLtfExpanded(v => !v)}
         />
       </div>
 
@@ -745,11 +873,12 @@ const JournalModule = ({ setTrades, date, setDate }) => {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="grid grid-cols-4 gap-2 text-center">
             {[
-              { g: 'A+', thr: '≥ 80%', c: '#00c896', bc: 'rgba(0,200,150,0.2)' },
-              { g: 'B',  thr: '≥ 60%', c: '#f5a623', bc: 'rgba(245,166,35,0.2)' },
-              { g: 'C',  thr: '< 60%', c: '#ff4757', bc: 'rgba(255,71,87,0.2)' },
+              { g: 'A+', thr: '≥ 85%', c: '#00c896', bc: 'rgba(0,200,150,0.2)' },
+              { g: 'B',  thr: '≥ 70%', c: '#f5a623', bc: 'rgba(245,166,35,0.2)' },
+              { g: 'C',  thr: '≥ 50%', c: '#f59e0b', bc: 'rgba(245,158,11,0.2)' },
+              { g: 'F',  thr: '< 50%', c: '#ff4757', bc: 'rgba(255,71,87,0.2)'  },
             ].map(t => (
               <div
                 key={t.g}
@@ -1092,7 +1221,8 @@ const HistoryModule = ({ trades, setTrades }) => {
                       <div className="flex items-center gap-1.5">
                         <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
                           t.grade === 'A+' ? 'bg-[rgba(0,200,150,0.12)] text-[#00c896]'
-                          : t.grade === 'B' ? 'bg-[rgba(245,166,35,0.12)] text-[#f5a623]'
+                          : t.grade === 'B'  ? 'bg-[rgba(245,166,35,0.12)] text-[#f5a623]'
+                          : t.grade === 'C'  ? 'bg-[rgba(245,158,11,0.12)] text-[#f59e0b]'
                           : 'bg-[rgba(255,71,87,0.12)] text-[#ff4757]'
                         }`}>{t.grade}</span>
                         {hasImages && <span className="text-[11px]" title="Has screenshots">📸</span>}
