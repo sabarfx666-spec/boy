@@ -6,7 +6,8 @@ import {
   X, Check, Newspaper, Lock, Upload, Video
 } from 'lucide-react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  LineChart, Line, BarChart, Bar, ReferenceLine,
+  XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts';
 import WeeklyModule from './WeeklyModule.jsx';
@@ -1179,6 +1180,39 @@ const AnalyticsModule = ({ trades, backtestDate }) => {
     dayStats[key].pnl += t.pnl;
   });
 
+  // Monthly (Time) Performance
+  const monthStatsMap = {};
+  trades.forEach(t => {
+    const d = new Date(t.date + 'T12:00:00');
+    const key   = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = d.toLocaleString('default', { month: 'short', year: '2-digit' });
+    if (!monthStatsMap[key]) monthStatsMap[key] = { key, label, total: 0, wins: 0, losses: 0, be: 0, nt: 0, pnl: 0 };
+    monthStatsMap[key].total++;
+    if (t.status === 'Win')         monthStatsMap[key].wins++;
+    else if (t.status === 'Loss')   monthStatsMap[key].losses++;
+    else if (t.status === 'Break Even') monthStatsMap[key].be++;
+    else if (t.status === 'No Trade')   monthStatsMap[key].nt++;
+    monthStatsMap[key].pnl += t.pnl;
+  });
+  const monthData = Object.values(monthStatsMap).sort((a, b) => a.key.localeCompare(b.key));
+
+  const MonthTooltip = ({ active, payload }) => {
+    if (!active || !payload?.length) return null;
+    const m = payload[0].payload;
+    const active2 = m.wins + m.losses + m.be;
+    const wr = active2 > 0 ? Math.round((m.wins / active2) * 100) : 0;
+    return (
+      <div className="bg-[#1e2038] border border-[#2a2d3e] rounded-xl px-3 py-2 text-xs">
+        <div className="font-bold text-white mb-1">{m.label}</div>
+        <div className="flex flex-col gap-0.5">
+          <span className={`font-mono font-black ${m.pnl >= 0 ? 'text-[#00c896]' : 'text-[#ff4757]'}`}>{m.pnl >= 0 ? '+' : ''}${m.pnl.toFixed(2)}</span>
+          <span className="text-[#4a90d9]">{wr}% WR · {m.total} trades</span>
+          <span className="text-[#5a5d7a]">{m.wins}W · {m.losses}L{m.be > 0 ? ` · ${m.be} BE` : ''}</span>
+        </div>
+      </div>
+    );
+  };
+
   // Calendar — default to backtest date, then latest trade, then today
   const defaultCalDate = (() => {
     if (backtestDate) return new Date(backtestDate + 'T12:00:00');
@@ -1398,6 +1432,54 @@ const AnalyticsModule = ({ trades, backtestDate }) => {
         </Card>
 
       </div>
+
+      {/* Monthly Time Performance */}
+      <Card>
+        <Label>Time Performance (Monthly)</Label>
+        <ResponsiveContainer width="100%" height={190}>
+          <BarChart data={monthData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1e2038" vertical={false} />
+            <XAxis dataKey="label" tick={{ fill: '#5a5d7a', fontSize: 10 }} axisLine={{ stroke: '#2a2d3e' }} tickLine={false} />
+            <YAxis tick={{ fill: '#5a5d7a', fontSize: 10 }} tickFormatter={v => `$${v}`} axisLine={false} tickLine={false} width={46} />
+            <Tooltip content={<MonthTooltip />} />
+            <ReferenceLine y={0} stroke="#2a2d3e" strokeWidth={1.5} />
+            <Bar dataKey="pnl" radius={[4, 4, 0, 0]} maxBarSize={48}>
+              {monthData.map((entry, i) => (
+                <Cell key={i} fill={entry.pnl >= 0 ? '#00c896' : '#ff4757'} fillOpacity={0.85} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+
+        {/* Monthly detail rows */}
+        <div className="mt-3 border-t border-[#1e2038] pt-3 flex flex-col gap-1.5">
+          <div className="grid grid-cols-5 text-[9px] uppercase tracking-widest text-[#3a3d4e] px-1 mb-0.5">
+            <span>Month</span><span className="text-center">Trades</span><span className="text-center">W · L · BE</span><span className="text-right">P&L</span><span className="text-right">WR%</span>
+          </div>
+          {monthData.map(m => {
+            const active = m.wins + m.losses + m.be;
+            const wr = active > 0 ? Math.round((m.wins / active) * 100) : 0;
+            const pnlColor = m.pnl >= 0 ? '#00c896' : '#ff4757';
+            return (
+              <div key={m.key} className="grid grid-cols-5 items-center px-1 py-1 rounded-lg hover:bg-[#1a1c2e] transition-colors">
+                <span className="text-[11px] font-bold text-white">{m.label}</span>
+                <span className="text-[10px] text-[#8888aa] text-center">{m.total}</span>
+                <span className="text-[10px] font-mono text-center">
+                  <span className="text-[#00c896]">{m.wins}</span>
+                  <span className="text-[#3a3d4e]"> · </span>
+                  <span className="text-[#ff4757]">{m.losses}</span>
+                  <span className="text-[#3a3d4e]"> · </span>
+                  <span className="text-[#f5a623]">{m.be}</span>
+                </span>
+                <span className="text-[10px] font-mono font-bold text-right" style={{ color: pnlColor }}>
+                  {m.pnl >= 0 ? '+' : ''}${m.pnl.toFixed(0)}
+                </span>
+                <span className="text-[10px] font-bold text-[#4a90d9] text-right">{active > 0 ? `${wr}%` : '—'}</span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
 
       {/* Performance Calendar */}
       <Card>
