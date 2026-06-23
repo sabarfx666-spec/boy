@@ -371,6 +371,8 @@ const VideoSlot = ({ value, onChange }) => {
 // ─── Module 1: Journal ────────────────────────────────────────────────────────
 
 const JournalModule = ({ setTrades, date, setDate }) => {
+  const [availableYears, setAvailableYears] = useState(() => load('profx_available_years', [2022, 2023, 2024, 2025, 2026]));
+  useEffect(() => { localStorage.setItem('profx_available_years', JSON.stringify(availableYears)); }, [availableYears]);
   const [lockedYears, setLockedYears] = useState(() => load('profx_locked_years', []));
   useEffect(() => { localStorage.setItem('profx_locked_years', JSON.stringify(lockedYears)); }, [lockedYears]);
   const [bias,        setBias]        = useState(null);
@@ -582,8 +584,8 @@ const JournalModule = ({ setTrades, date, setDate }) => {
               <div className="text-[10px] text-[#5a5d7a]">Backtest Period</div>
               <div className="text-[9px] text-[#3a3d4e]">Hold lock icon to toggle</div>
             </div>
-            <div className="flex gap-1.5 mb-2">
-              {[2022, 2023, 2024, 2025, 2026].map(yr => {
+            <div className="flex gap-1.5 mb-2 flex-wrap">
+              {availableYears.map(yr => {
                 const active  = date.startsWith(String(yr));
                 const locked  = lockedYears.includes(yr);
                 const toggleLock = (e) => {
@@ -628,6 +630,15 @@ const JournalModule = ({ setTrades, date, setDate }) => {
                   </div>
                 );
               })}
+              {/* Add next year */}
+              <button
+                onClick={() => {
+                  const next = Math.max(...availableYears) + 1;
+                  setAvailableYears(prev => [...prev, next]);
+                }}
+                className="px-3 py-2 rounded-lg text-xs font-bold bg-[#0f111a] border border-dashed border-[#2a2d3e] text-[#4a90d9] hover:border-[#4a90d9] hover:bg-[rgba(74,144,217,0.06)] transition-all flex-shrink-0"
+                title="Add next year"
+              >+ yr</button>
             </div>
             <input
               type="date" value={date}
