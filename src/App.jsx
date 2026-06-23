@@ -299,6 +299,12 @@ const JournalModule = ({ setTrades, date, setDate }) => {
   const [webhookInput, setWebhookInput] = useState('');
   const [showDiscordSettings, setShowDiscordSettings] = useState(false);
   const [discordSendStatus, setDiscordSendStatus] = useState('idle');
+  const [toast, setToast] = useState(null); // { msg, color }
+
+  const showToast = (msg, color = '#00c896') => {
+    setToast({ msg, color });
+    setTimeout(() => setToast(null), 2500);
+  };
 
   const totalRules   = biasRules.length + entryRules.length;
   const checkedCount = biasRules.filter(r => r.checked).length + entryRules.filter(r => r.checked).length;
@@ -398,6 +404,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
     };
     setTrades(prev => [...prev, trade]);
     postTradeToDiscord(trade);
+    showToast(`✓ Trade logged — ${pair} ${outcome} | 1:${rr} | Grade ${grade.label}`);
     resetForm();
   };
 
@@ -418,6 +425,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
     };
     setTrades(prev => [...prev, trade]);
     postTradeToDiscord(trade);
+    showToast(`🚫 No Trade logged — ${pair} ${date}`, '#f5a623');
     resetForm();
   };
 
@@ -426,6 +434,16 @@ const JournalModule = ({ setTrades, date, setDate }) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+      {/* ── Toast notification ── */}
+      {toast && (
+        <div
+          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 px-5 py-3 rounded-xl text-white text-sm font-bold shadow-2xl transition-all pointer-events-none"
+          style={{ background: toast.color, boxShadow: `0 0 30px ${toast.color}55`, minWidth: 280, textAlign: 'center' }}
+        >
+          {toast.msg}
+        </div>
+      )}
 
       {/* ── Left Column ── */}
       <div className="flex flex-col gap-4">
