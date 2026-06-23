@@ -1454,8 +1454,29 @@ export default function App() {
     return lockedArr.includes(todayYear) ? `${todayYear - lockedArr.length}-01-01` : todayStr();
   });
 
-  useEffect(() => { localStorage.setItem('profx_trades',  JSON.stringify(trades));       }, [trades]);
-  useEffect(() => { localStorage.setItem('profx_weekly',  JSON.stringify(weeklyPlans));  }, [weeklyPlans]);
+  useEffect(() => {
+    const trySet = (key, data) => {
+      try { localStorage.setItem(key, JSON.stringify(data)); return true; }
+      catch { return false; }
+    };
+    // Try full save; if quota exceeded strip base64 images and retry
+    if (!trySet('profx_trades', trades)) {
+      trySet('profx_trades', trades.map(({ imgBefore, imgAfter, imgResult, ...t }) => t));
+    }
+  }, [trades]);
+
+  useEffect(() => {
+    const trySet = (key, data) => {
+      try { localStorage.setItem(key, JSON.stringify(data)); return true; }
+      catch { return false; }
+    };
+    if (!trySet('profx_weekly', weeklyPlans)) {
+      const slim = Object.fromEntries(
+        Object.entries(weeklyPlans).map(([k, v]) => { const { imgBefore, imgAfter, ...rest } = v; return [k, rest]; })
+      );
+      trySet('profx_weekly', slim);
+    }
+  }, [weeklyPlans]);
   useEffect(() => { localStorage.setItem('profx_date',    JSON.stringify(date));          }, [date]);
 
   const tabs = [
