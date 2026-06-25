@@ -256,7 +256,7 @@ export default function AccountsPage() {
   const linkedTrades = useMemo(() => {
     if (!account) return [];
     return [...state.trades]
-      .filter(t => t.decision === "TAKE" && t.outcome === "WIN")
+      .filter(t => t.decision === "TAKE")
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [state.trades, account]);
 
@@ -352,7 +352,7 @@ export default function AccountsPage() {
                 <p className="font-mono text-[10px] text-[#444]">{linkedTrades.length} trades</p>
               </div>
               {linkedTrades.length === 0 ? (
-                <div className="py-12 text-center font-mono text-xs text-[#333]">No winning trades yet</div>
+                <div className="py-12 text-center font-mono text-xs text-[#333]">No trades yet</div>
               ) : (
                 <table className="w-full">
                   <thead>
