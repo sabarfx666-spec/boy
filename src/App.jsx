@@ -199,6 +199,16 @@ const RuleSection = ({ rules, setter, newVal, setNew, label, subtitle, expanded,
         <span className="text-xs font-mono font-bold text-[#00c896]">{rawChecked}/{rules.length}</span>
       </button>
 
+      {/* Progress bar always visible under header */}
+      <div className="px-4 pb-2">
+        <div className="h-0.5 w-full rounded-full overflow-hidden" style={{ background: '#1a1d2e' }}>
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${rules.length > 0 ? Math.round((rawChecked / rules.length) * 100) : 0}%`, background: '#00c896' }}
+          />
+        </div>
+      </div>
+
       {expanded && (
         <>
           {/* Subtitle + divider */}
@@ -422,8 +432,13 @@ const JournalModule = ({ setTrades, date, setDate }) => {
     setTimeout(() => setToast(null), 2500);
   };
 
-  const totalRules   = biasRules.length + entryRules.length;
-  const checkedCount = biasRules.filter(r => r.checked).length + entryRules.filter(r => r.checked).length;
+  // Always compute score directly from the active 4 rule states
+  const activeHTF    = bias === 'Bearish' ? bearBiasRules  : bullBiasRules;
+  const activeLTF    = bias === 'Bearish' ? bearEntryRules : bullEntryRules;
+  const htfChecked   = activeHTF.filter(r => r.checked).length;
+  const ltfChecked   = activeLTF.filter(r => r.checked).length;
+  const totalRules   = activeHTF.length + activeLTF.length;
+  const checkedCount = htfChecked + ltfChecked;
   const pct          = totalRules > 0 ? Math.round((checkedCount / totalRules) * 100) : 0;
   const grade        = calcGrade(pct);
   const lotSize      = calcLotSize(riskAmt, sl);
