@@ -8,7 +8,7 @@ import { useAuth } from "@/store/AuthContext";
 const navItems = [
   { href: "/",        label: "Dashboard",      icon: LayoutDashboard },
   { href: "/weekly",  label: "Weekly Outlook", icon: TrendingUp       },
-  { href: "/journal", label: "Journal",        icon: BookOpen         },
+  { href: "/history", label: "Journal",        icon: BookOpen         },
   { href: "/habits",  label: "Habits",         icon: Target           },
 ];
 
