@@ -1,13 +1,15 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSabar } from "@/store/SabarContext";
 import { Trade } from "@/store/types";
 import {
   BookOpen, TrendingUp, TrendingDown, Minus, Search,
   FileText, ArrowLeft, Award, AlertCircle, Brain, XCircle,
-  User, CreditCard,
+  User, CreditCard, Link2, ChevronDown, Plus,
 } from "lucide-react";
 import Link from "next/link";
+
+type Account = { id: string; name: string; balance: number };
 
 /* ── helpers ─────────────────────────────────────────────── */
 function tradePct(t: Trade) {
@@ -44,6 +46,32 @@ export default function HistoryPage() {
   const [timeFilter,   setTimeFilter]   = useState("All Time");
   const [selected,     setSelected]     = useState<Trade | null>(null);
   const [editNotes,    setEditNotes]    = useState("");
+  const [accounts,     setAccounts]     = useState<Account[]>([]);
+  const [tradeLinks,   setTradeLinks]   = useState<Record<string, string>>({});
+  const [showLinkDrop, setShowLinkDrop] = useState(false);
+
+  useEffect(() => {
+    try {
+      setAccounts(JSON.parse(localStorage.getItem("sabar-accounts") ?? "[]"));
+      setTradeLinks(JSON.parse(localStorage.getItem("sabar-trade-links") ?? "{}"));
+    } catch {}
+  }, []);
+
+  const saveLinks = (links: Record<string, string>) => {
+    setTradeLinks(links);
+    localStorage.setItem("sabar-trade-links", JSON.stringify(links));
+  };
+
+  const linkAccount = (tradeId: string, accountId: string) => {
+    saveLinks({ ...tradeLinks, [tradeId]: accountId });
+    setShowLinkDrop(false);
+  };
+
+  const unlinkAccount = (tradeId: string) => {
+    const next = { ...tradeLinks };
+    delete next[tradeId];
+    saveLinks(next);
+  };
 
   const TIME_DAYS: Record<string, number> = {
     "Last 7 days": 7, "Last 14 days": 14, "Last 20 days": 20, "Last 30 days": 30,
@@ -79,7 +107,7 @@ export default function HistoryPage() {
   const skipped     = filtered.filter(t => t.decision === "SKIP").length;
   const aStar       = filtered.filter(t => tradePct(t) >= 90).length;
 
-  const handleSelect = (t: Trade) => { setSelected(t); setEditNotes(t.notes ?? ""); };
+  const handleSelect = (t: Trade) => { setSelected(t); setEditNotes(t.notes ?? ""); setShowLinkDrop(false); };
 
   const setOutcome = (key: string) => {
     if (!selected) return;
@@ -279,6 +307,61 @@ export default function HistoryPage() {
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Linked Accounts & PnL */}
+              <div>
+                <div className="flex items-center gap-2 mb-2.5">
+                  <div className="w-2 h-2 rounded-full" style={{ background: "#E53E3E" }} />
+                  <p className="font-mono text-xs font-bold text-white">Linked Accounts & PnL</p>
+                </div>
+
+                {/* Link account button */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowLinkDrop(v => !v)}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg font-mono text-xs transition-all"
+                    style={{ background: "#0A0A0A", border: "1px solid #2A2A2A", color: "#555" }}>
+                    <span className="flex items-center gap-1.5"><Plus size={11} /> Link account</span>
+                    <ChevronDown size={11} />
+                  </button>
+                  {showLinkDrop && (
+                    <div className="absolute left-0 right-0 top-full mt-1 rounded-lg z-50 overflow-hidden"
+                      style={{ background: "#111", border: "1px solid #2A2A2A", boxShadow: "0 8px 24px rgba(0,0,0,0.6)" }}>
+                      {accounts.length === 0 ? (
+                        <p className="px-3 py-3 font-mono text-[10px] text-[#444]">No accounts — create one in Accounts page</p>
+                      ) : accounts.map(acc => (
+                        <button key={acc.id}
+                          onClick={() => linkAccount(selected.id, acc.id)}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-left font-mono text-xs text-white hover:bg-[#1A1A1A] transition-colors">
+                          <CreditCard size={11} style={{ color: "#E53E3E" }} />
+                          {acc.name}
+                          <span className="ml-auto font-mono text-[10px] text-[#444]">${acc.balance.toLocaleString()}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Linked account display */}
+                {tradeLinks[selected.id] && (() => {
+                  const acc = accounts.find(a => a.id === tradeLinks[selected.id]);
+                  if (!acc) return null;
+                  return (
+                    <div className="mt-2 flex items-center justify-between px-3 py-2.5 rounded-lg"
+                      style={{ background: "#0A0A0A", border: "1px solid #1A1A1A" }}>
+                      <div className="flex items-center gap-2">
+                        <Link2 size={11} style={{ color: "#E53E3E" }} />
+                        <span className="font-mono text-xs font-bold text-white">{acc.name}</span>
+                        <span className="font-mono text-[10px] text-[#555]">(${acc.balance.toLocaleString()})</span>
+                      </div>
+                      <button onClick={() => unlinkAccount(selected.id)}
+                        className="font-mono text-[9px] text-[#333] hover:text-[#FF3B3B] transition-colors">
+                        unlink
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Rules score */}
