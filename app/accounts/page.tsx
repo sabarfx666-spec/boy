@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSabar } from "@/store/SabarContext";
 import { Trade } from "@/store/types";
 import { ArrowLeft, Plus, Trash2, CreditCard, TrendingUp, BarChart2, Link2 } from "lucide-react";
@@ -17,10 +17,16 @@ function gradeInfo(pct: number) {
 
 export default function AccountsPage() {
   const { state } = useSabar();
-  const [accounts, setAccounts] = useState<{ id: string; name: string; balance: number }[]>(() => {
-    try { return JSON.parse(localStorage.getItem("sabar-accounts") ?? "[]"); } catch { return []; }
-  });
-  const [selected, setSelected] = useState<string>(accounts[0]?.id ?? "");
+  const [accounts, setAccounts] = useState<{ id: string; name: string; balance: number }[]>([]);
+  const [selected, setSelected] = useState<string>("");
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("sabar-accounts") ?? "[]");
+      setAccounts(saved);
+      if (saved.length > 0) setSelected(saved[0].id);
+    } catch {}
+  }, []);
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newBal, setNewBal] = useState("");
