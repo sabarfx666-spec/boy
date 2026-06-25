@@ -222,18 +222,18 @@ export default function AccountsPage() {
 
   useEffect(() => {
     try {
-      const raw = JSON.parse(localStorage.getItem("sabar-accounts") ?? "[]");
+      const raw = JSON.parse(localStorage.getItem("sabar-trading-accounts") ?? "[]");
       // Repair any accounts missing an id
       const saved = raw.map((a: Account, i: number) => ({ ...a, id: a.id ?? `acc-repair-${i}` }));
       setAccounts(saved);
-      localStorage.setItem("sabar-accounts", JSON.stringify(saved));
+      localStorage.setItem("sabar-trading-accounts", JSON.stringify(saved));
       if (saved.length > 0) setSelected(saved[0].id);
     } catch {}
   }, []);
 
   const saveAccounts = (accs: Account[]) => {
     setAccounts(accs);
-    localStorage.setItem("sabar-accounts", JSON.stringify(accs));
+    localStorage.setItem("sabar-trading-accounts", JSON.stringify(accs));
   };
 
   const addAccount = () => {

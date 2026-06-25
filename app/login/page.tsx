@@ -23,25 +23,27 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    await new Promise(r => setTimeout(r, 400));
+    try {
+      await new Promise(r => setTimeout(r, 400));
 
-    let err: string | null;
-    if (tab === "login") {
-      err = login(email, password);
-    } else {
-      if (!name.trim()) { setError("Please enter your name."); setLoading(false); return; }
-      err = signup(name.trim(), email, password);
+      let err: string | null;
+      if (tab === "login") {
+        err = login(email, password);
+      } else {
+        if (!name.trim()) { setError("Please enter your name."); return; }
+        err = signup(name.trim(), email, password);
+      }
+
+      if (err === "PENDING_APPROVAL") {
+        setPendingName(tab === "signup" ? name.trim() : email);
+        setPending(true);
+        return;
+      }
+      if (err) { setError(err); return; }
+      router.push("/");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-
-    if (err === "PENDING_APPROVAL") {
-      setPendingName(tab === "signup" ? name.trim() : email);
-      setPending(true);
-      return;
-    }
-    if (err) { setError(err); return; }
-    router.push("/");
   }
 
   // Pending approval screen
@@ -116,7 +118,7 @@ export default function LoginPage() {
         {/* Tabs */}
         <div className="flex rounded-xl overflow-hidden mb-6 mt-5" style={{ background: "#1A1A1A" }}>
           {(["login", "signup"] as const).map(t => (
-            <button key={t} onClick={() => { setTab(t); setError(null); }}
+            <button key={t} onClick={() => { setTab(t); setError(null); setLoading(false); }}
               className="flex-1 py-2.5 text-sm font-semibold font-sans transition-all"
               style={{ background: tab === t ? "#E53E3E" : "transparent", color: tab === t ? "#fff" : "#666", borderRadius: "10px" }}>
               {t === "login" ? "Login" : "Sign Up"}

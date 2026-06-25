@@ -53,7 +53,7 @@ export default function HistoryPage() {
 
   useEffect(() => {
     try {
-      const raw = JSON.parse(localStorage.getItem("sabar-accounts") ?? "[]");
+      const raw = JSON.parse(localStorage.getItem("sabar-trading-accounts") ?? "[]");
       const fixed = raw.map((a: Account, i: number) => ({ ...a, id: a.id ?? `acc-repair-${i}` }));
       setAccounts(fixed);
       setTradeLinks(JSON.parse(localStorage.getItem("sabar-trade-links") ?? "{}"));
