@@ -336,7 +336,7 @@ export default function HistoryPage() {
                           className="w-full flex items-center gap-2 px-3 py-2.5 text-left font-mono text-xs text-white hover:bg-[#1A1A1A] transition-colors">
                           <CreditCard size={11} style={{ color: "#E53E3E" }} />
                           {acc.name}
-                          <span className="ml-auto font-mono text-[10px] text-[#444]">${acc.balance.toLocaleString()}</span>
+                          <span className="ml-auto font-mono text-[10px] text-[#444]">${(acc.balance ?? 0).toLocaleString()}</span>
                         </button>
                       ))}
                     </div>
