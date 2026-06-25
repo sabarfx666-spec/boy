@@ -145,8 +145,12 @@ const buildSegments = (rules) => {
   return segments;
 };
 
-const RuleSection = ({ rules, setter, newVal, setNew, label, subtitle, expanded, onToggle }) => {
+const RuleSection = ({ rules, setter, newVal, setNew, label, subtitle, expanded, onToggle, onCheckedChange }) => {
   const rawChecked = rules.filter(r => r.checked).length;
+
+  useEffect(() => {
+    onCheckedChange?.(rawChecked, rules.length);
+  }, [rawChecked, rules.length]);
 
   const renderRule = (rule, isGrouped) => (
     <div key={rule.id} className="flex items-center gap-2 group/rule">
@@ -432,13 +436,17 @@ const JournalModule = ({ setTrades, date, setDate }) => {
     setTimeout(() => setToast(null), 2500);
   };
 
-  // Always compute score directly from the active 4 rule states
-  const activeHTF    = bias === 'Bearish' ? bearBiasRules  : bullBiasRules;
-  const activeLTF    = bias === 'Bearish' ? bearEntryRules : bullEntryRules;
-  const htfChecked   = activeHTF.filter(r => r.checked).length;
-  const ltfChecked   = activeLTF.filter(r => r.checked).length;
-  const totalRules   = activeHTF.length + activeLTF.length;
-  const checkedCount = htfChecked + ltfChecked;
+  // Score state synced via callbacks from RuleSection children (rawChecked inside child is always correct)
+  const [htfScore, setHtfScore] = useState(() => {
+    const htf = bias === 'Bearish' ? bearBiasRules : bullBiasRules;
+    return { c: htf.filter(r => r.checked).length, t: htf.length };
+  });
+  const [ltfScore, setLtfScore] = useState(() => {
+    const ltf = bias === 'Bearish' ? bearEntryRules : bullEntryRules;
+    return { c: ltf.filter(r => r.checked).length, t: ltf.length };
+  });
+  const checkedCount = htfScore.c + ltfScore.c;
+  const totalRules   = htfScore.t + ltfScore.t;
   const pct          = totalRules > 0 ? Math.round((checkedCount / totalRules) * 100) : 0;
   const grade        = calcGrade(pct);
   const lotSize      = calcLotSize(riskAmt, sl);
@@ -807,6 +815,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           label="HTF Bias"
           subtitle="Daily & 4-Hour Timeframe"
           expanded={htfExpanded} onToggle={() => setHtfExpanded(v => !v)}
+          onCheckedChange={(c, t) => setHtfScore({ c, t })}
         />
         <RuleSection
           rules={entryRules} setter={setEntryRules}
@@ -814,6 +823,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           label="LTF Entry"
           subtitle="15-Minute & 1-Hour Timeframe"
           expanded={ltfExpanded} onToggle={() => setLtfExpanded(v => !v)}
+          onCheckedChange={(c, t) => setLtfScore({ c, t })}
         />
       </div>
 
