@@ -62,9 +62,28 @@ export function TradeSummary() {
   const pctColor         = pct === 100 ? "#00FF7F" : pct >= 80 ? "#6AECE1" : pct >= 50 ? "#F59E0B" : "#FF3B3B";
 
   const handleAction = async (type: "TAKE" | "SKIP") => {
+    // Read pre-trade proof snapshots from dashboard's ChartSnapshots section
+    const SLOT_TO_TF: Record<string, string> = {
+      weekly: "Weekly", daily: "Daily", "4h": "4H", entry: "15M", after: "Result",
+    };
+    let chartProofs: Record<string, string> | undefined;
+    try {
+      const raw = localStorage.getItem("sabar-proof-images");
+      if (raw) {
+        const imgs: Record<string, string | null> = JSON.parse(raw);
+        const mapped: Record<string, string> = {};
+        Object.entries(imgs).forEach(([id, url]) => {
+          if (url) mapped[SLOT_TO_TF[id] ?? id] = url;
+        });
+        if (Object.keys(mapped).length > 0) chartProofs = mapped;
+        // clear pending proofs after taking trade
+        localStorage.removeItem("sabar-proof-images");
+      }
+    } catch {}
+
     dispatch({
       type: type === "TAKE" ? "TAKE_TRADE" : "SKIP_TRADE",
-      payload: { rr: 0 },
+      payload: { rr: 0, ...(chartProofs ? { chartProofs } : {}) },
     });
 
     if (webhookUrl && type === "TAKE") {
