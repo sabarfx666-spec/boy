@@ -217,6 +217,8 @@ export default function AccountsPage() {
   const [newName,     setNewName]     = useState("");
   const [newBal,      setNewBal]      = useState("");
   const [chartTrade,  setChartTrade]  = useState<Trade | null>(null);
+  const [page,        setPage]        = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
     try {
@@ -255,8 +257,12 @@ export default function AccountsPage() {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [state.trades, account]);
 
-  const totalPnl = linkedTrades.reduce((s, t) => s + (t.pnl ?? 0), 0);
-  const totalR   = linkedTrades.reduce((s, t) => s + (t.rr ?? 0), 0);
+  const totalPnl   = linkedTrades.reduce((s, t) => s + (t.pnl ?? 0), 0);
+  const totalR     = linkedTrades.reduce((s, t) => s + (t.rr ?? 0), 0);
+  const totalPages = Math.max(1, Math.ceil(linkedTrades.length / rowsPerPage));
+  const safePage   = Math.min(page, totalPages);
+  const pageStart  = (safePage - 1) * rowsPerPage;
+  const pageTrades = linkedTrades.slice(pageStart, pageStart + rowsPerPage);
   const startBal = account?.balance ?? 0;
   const curBal   = startBal + totalPnl;
   const pctGain  = startBal > 0 ? ((totalPnl / startBal) * 100).toFixed(1) : null;
@@ -354,7 +360,7 @@ export default function AccountsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {linkedTrades.map(t => {
+                    {pageTrades.map(t => {
                       const g = gradeInfo(tradePct(t));
                       const hasImg = hasCharts(t);
                       const isOpen = chartTrade?.id === t.id;
@@ -398,6 +404,35 @@ export default function AccountsPage() {
                     })}
                   </tbody>
                 </table>
+              )}
+              {/* Pagination footer */}
+              {linkedTrades.length > 0 && (
+                <div className="flex items-center justify-between px-5 py-3 border-t" style={{ borderColor: "#1A1A1A" }}>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage === 1}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center font-mono text-xs transition-all disabled:opacity-30"
+                      style={{ background: "#111", border: "1px solid #1A1A1A", color: "#aaa" }}>
+                      ‹
+                    </button>
+                    <span className="font-mono text-xs text-white">{safePage}</span>
+                    <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center font-mono text-xs transition-all disabled:opacity-30"
+                      style={{ background: "#111", border: "1px solid #1A1A1A", color: "#aaa" }}>
+                      ›
+                    </button>
+                    <span className="font-mono text-[10px] text-[#444] ml-2">
+                      Rows per page
+                    </span>
+                    <select value={rowsPerPage} onChange={e => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
+                      className="px-2 py-1 rounded-lg font-mono text-xs text-white focus:outline-none"
+                      style={{ background: "#111", border: "1px solid #1A1A1A" }}>
+                      {[5, 10, 20, 50].map(n => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </div>
+                  <span className="font-mono text-[10px] text-[#444]">
+                    {pageStart + 1}–{Math.min(pageStart + rowsPerPage, linkedTrades.length)} of {linkedTrades.length}
+                  </span>
+                </div>
               )}
             </div>
           </>
