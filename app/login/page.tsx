@@ -33,6 +33,7 @@ export default function LoginPage() {
       const accounts = JSON.parse(localStorage.getItem("sabar-accounts") ?? "[]");
       const found = accounts.find((a: any) => a.email?.toLowerCase() === forgotEmail.toLowerCase());
       if (!found) { setForgotResult("no-account"); return; }
+      if (found.role !== "admin") { setForgotResult("not-admin"); return; }
       setForgotResult(found.password);
     } catch {
       setForgotResult("no-account");
@@ -234,6 +235,11 @@ export default function LoginPage() {
           {forgotResult === "no-account" && (
             <div className="px-4 py-2.5 rounded-xl mb-3 text-sm font-sans" style={{ background: "rgba(229,62,62,0.1)", border: "1px solid rgba(229,62,62,0.3)", color: "#E53E3E" }}>
               No account found. Please sign up first.
+            </div>
+          )}
+          {forgotResult === "not-admin" && (
+            <div className="px-4 py-2.5 rounded-xl mb-3 text-sm font-sans" style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", color: "#F59E0B" }}>
+              Contact the admin to reset your password.
             </div>
           )}
 
