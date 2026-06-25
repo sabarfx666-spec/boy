@@ -222,8 +222,11 @@ export default function AccountsPage() {
 
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem("sabar-accounts") ?? "[]");
+      const raw = JSON.parse(localStorage.getItem("sabar-accounts") ?? "[]");
+      // Repair any accounts missing an id
+      const saved = raw.map((a: Account, i: number) => ({ ...a, id: a.id ?? `acc-repair-${i}` }));
       setAccounts(saved);
+      localStorage.setItem("sabar-accounts", JSON.stringify(saved));
       if (saved.length > 0) setSelected(saved[0].id);
     } catch {}
   }, []);

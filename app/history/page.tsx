@@ -52,7 +52,9 @@ export default function HistoryPage() {
 
   useEffect(() => {
     try {
-      setAccounts(JSON.parse(localStorage.getItem("sabar-accounts") ?? "[]"));
+      const raw = JSON.parse(localStorage.getItem("sabar-accounts") ?? "[]");
+      const fixed = raw.map((a: Account, i: number) => ({ ...a, id: a.id ?? `acc-repair-${i}` }));
+      setAccounts(fixed);
       setTradeLinks(JSON.parse(localStorage.getItem("sabar-trade-links") ?? "{}"));
     } catch {}
   }, []);
@@ -217,11 +219,11 @@ export default function HistoryPage() {
         <div className="col-span-3 space-y-2">
           {filtered.length === 0
             ? <p className="text-center py-16 font-mono text-xs text-[#333]">No trades found</p>
-            : filtered.map(t => {
+            : filtered.map((t, idx) => {
                 const g = gradeInfo(tradePct(t));
                 const isActive = selected?.id === t.id;
                 return (
-                  <button key={t.id} onClick={() => handleSelect(t)}
+                  <button key={`${t.id}-${idx}`} onClick={() => handleSelect(t)}
                     className="w-full text-left p-4 rounded-xl transition-all"
                     style={{ background: isActive ? "#141414" : "#0D0D0D", border: `1px solid ${isActive ? "#2A2A2A" : "#1A1A1A"}` }}>
                     <div className="flex items-start justify-between">
