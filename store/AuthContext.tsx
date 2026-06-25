@@ -111,14 +111,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (raw) {
       try {
         const old: any[] = JSON.parse(raw);
-        const migrated = old.map((a, i) => ({
-          email:     a.email,
-          name:      a.name,
-          password:  a.password,
-          role:      a.role ?? (i === 0 ? "admin" : "user"),
-          approved:  a.approved ?? true,
-          createdAt: a.createdAt ?? new Date().toISOString(),
-        })) as StoredAccount[];
+        // Filter out invalid records (e.g. trading accounts that have no email/password)
+        const migrated = old
+          .filter((a: any) => a.email && a.password)
+          .map((a, i) => ({
+            email:     a.email,
+            name:      a.name,
+            password:  a.password,
+            role:      a.role ?? (i === 0 ? "admin" : "user"),
+            approved:  a.approved ?? true,
+            createdAt: a.createdAt ?? new Date().toISOString(),
+          })) as StoredAccount[];
         localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(migrated));
       } catch {}
     }
@@ -152,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function login(email: string, password: string): string | null {
     const accounts = getAccounts();
-    const found = accounts.find(a => a.email.toLowerCase() === email.toLowerCase());
+    const found = accounts.find(a => a.email?.toLowerCase() === email.toLowerCase());
     if (!found) return "No account found with that email.";
     if (found.password !== password) return "Incorrect password.";
     if (!found.approved) return "PENDING_APPROVAL";
@@ -164,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function signup(name: string, email: string, password: string): string | null {
     const accounts = getAccounts();
-    if (accounts.find(a => a.email.toLowerCase() === email.toLowerCase())) {
+    if (accounts.find(a => a.email?.toLowerCase() === email.toLowerCase())) {
       return "An account with this email already exists.";
     }
     const isFirst = accounts.length === 0;
