@@ -366,14 +366,6 @@ export default function HistoryPage() {
                 })()}
               </div>
 
-              {/* Rules score */}
-              <div className="flex items-center justify-between px-3 py-2.5 rounded-lg"
-                style={{ background: "#0A0A0A", border: "1px solid #1A1A1A" }}>
-                <span className="font-mono text-[10px] text-[#444]">Rules Checked</span>
-                <span className="font-mono text-xs font-bold text-white">
-                  {selected.checkedCount}/{selected.totalRules} ({tradePct(selected)}%)
-                </span>
-              </div>
 
               {/* Trade Notes */}
               <div>
