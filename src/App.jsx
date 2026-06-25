@@ -3,7 +3,7 @@ import {
   TrendingUp, BookOpen, BarChart2, Plus, Trash2,
   Target, DollarSign, Activity, Award, Calendar,
   ChevronDown, CheckSquare, RefreshCw, AlertTriangle,
-  X, Check, Newspaper, Lock, Upload, Video
+  X, Check, Newspaper, Lock, Upload, Video, Coffee, Sun, LogIn, LayoutGrid
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, ReferenceLine,
@@ -72,7 +72,7 @@ const calcLotSize = (risk, sl) => {
 
 const calcGrade = (pct) => {
   if (pct >= 90) return { label: 'A*', color: '#00c896', ring: 'rgba(0,200,150,0.4)', bg: 'rgba(0,200,150,0.08)' };
-  if (pct >= 70) return { label: 'B*', color: '#4a90d9', ring: 'rgba(74,144,217,0.4)', bg: 'rgba(74,144,217,0.08)' };
+  if (pct >= 70) return { label: 'B*', color: '#a78bfa', ring: 'rgba(167,139,250,0.4)', bg: 'rgba(167,139,250,0.08)' };
   if (pct >= 50) return { label: 'C',  color: '#f5a623', ring: 'rgba(245,166,35,0.4)', bg: 'rgba(245,166,35,0.08)' };
   return              { label: 'D',  color: '#ff4757', ring: 'rgba(255,71,87,0.4)',  bg: 'rgba(255,71,87,0.08)'  };
 };
@@ -308,14 +308,14 @@ const ImageSlot = ({ label, value, onChange }) => {
           onPaste={handlePaste}
           onDrop={handleDrop}
           onDragOver={e => e.preventDefault()}
-          className="relative w-full h-24 rounded-lg border-2 border-dashed border-[#2a2d3e] flex flex-col items-center justify-center gap-1 hover:border-[#4a90d9] hover:bg-[rgba(74,144,217,0.04)] transition-all focus:outline-none focus:border-[#4a90d9] outline-none"
+          className="relative w-full h-24 rounded-lg border-2 border-dashed border-[#2a2d3e] flex flex-col items-center justify-center gap-1 hover:border-[#e63946] hover:bg-[rgba(230,57,70,0.04)] transition-all focus:outline-none focus:border-[#e63946] outline-none"
         >
           {/* Click zone: focuses for paste */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => zoneRef.current?.focus()} />
           {/* Upload icon */}
           <button
             onClick={e => { e.stopPropagation(); fileRef.current?.click(); }}
-            className="relative z-10 p-1.5 rounded-lg bg-[#1e2038] text-[#4a90d9] hover:bg-[#2a2d3e] transition-all"
+            className="relative z-10 p-1.5 rounded-lg bg-[#1e2038] text-[#e63946] hover:bg-[#2a2d3e] transition-all"
             title="Upload file"
           >
             <Upload size={14} />
@@ -350,7 +350,7 @@ const VideoSlot = ({ value, onChange }) => {
   return (
     <div>
       <div className="flex items-center gap-2 mb-2">
-        <Video size={12} className="text-[#4a90d9]" />
+        <Video size={12} className="text-[#e63946]" />
         <span className="text-[10px] font-bold uppercase tracking-widest text-[#5a5d7a]">Trade Replay Video</span>
         <span className="text-[9px] text-[#3a3d4e]">· max 2 min · mp4 / webm / mov</span>
       </div>
@@ -367,10 +367,10 @@ const VideoSlot = ({ value, onChange }) => {
       ) : (
         <button
           onClick={() => fileRef.current?.click()}
-          className="w-full py-5 rounded-xl border-2 border-dashed border-[#2a2d3e] flex flex-col items-center justify-center gap-2 hover:border-[#4a90d9] hover:bg-[rgba(74,144,217,0.04)] transition-all"
+          className="w-full py-5 rounded-xl border-2 border-dashed border-[#2a2d3e] flex flex-col items-center justify-center gap-2 hover:border-[#e63946] hover:bg-[rgba(230,57,70,0.04)] transition-all"
         >
           <div className="w-10 h-10 rounded-full bg-[#1e2038] flex items-center justify-center">
-            <Video size={18} className="text-[#4a90d9]" />
+            <Video size={18} className="text-[#e63946]" />
           </div>
           <div className="text-center">
             <div className="text-xs text-[#5a5d7a] font-semibold">Click to upload replay video</div>
@@ -626,7 +626,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
                         locked
                           ? 'bg-[#0f111a] border border-[#2a2d3e] text-[#2a2d3e] cursor-not-allowed'
                           : active
-                            ? 'bg-gradient-to-b from-[#4a90d9] to-[#3a7ac9] text-white shadow shadow-[rgba(74,144,217,0.4)]'
+                            ? 'bg-gradient-to-b from-[#e63946] to-[#3a7ac9] text-white shadow shadow-[rgba(230,57,70,0.4)]'
                             : 'bg-[#0f111a] border border-[#2a2d3e] text-[#5a5d7a] hover:text-white hover:border-[#4a4d5e]'
                       }`}
                     >
@@ -659,7 +659,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
                   const next = Math.max(...availableYears) + 1;
                   setAvailableYears(prev => [...prev, next]);
                 }}
-                className="px-3 py-2 rounded-lg text-xs font-bold bg-[#0f111a] border border-dashed border-[#2a2d3e] text-[#4a90d9] hover:border-[#4a90d9] hover:bg-[rgba(74,144,217,0.06)] transition-all flex-shrink-0"
+                className="px-3 py-2 rounded-lg text-xs font-bold bg-[#0f111a] border border-dashed border-[#2a2d3e] text-[#e63946] hover:border-[#e63946] hover:bg-[rgba(230,57,70,0.06)] transition-all flex-shrink-0"
                 title="Add next year"
               >+ yr</button>
             </div>
@@ -669,7 +669,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
                 const yr = parseInt(e.target.value.slice(0, 4));
                 if (!lockedYears.includes(yr)) setDate(e.target.value);
               }}
-              className="w-full bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#4a90d9]"
+              className="w-full bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e63946]"
             />
             {lockedYears.length > 0 && (
               <div className="mt-1.5 flex items-center gap-1.5">
@@ -711,7 +711,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
                   key={s} onClick={() => { setSession(s); setTradeTime(null); }}
                   className={`py-2.5 rounded-lg text-sm font-semibold transition-all ${
                     session === s
-                      ? 'bg-[#4a90d9] text-white shadow-lg shadow-[rgba(74,144,217,0.3)]'
+                      ? 'bg-[#e63946] text-white shadow-lg shadow-[rgba(230,57,70,0.3)]'
                       : 'bg-[#0f111a] border border-[#2a2d3e] text-[#8888aa] hover:border-[#4a4d5e]'
                   }`}
                 >
@@ -750,7 +750,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
                     onClick={() => setPair(p)}
                     className={`py-1.5 pl-3 pr-6 rounded-lg text-xs font-mono font-bold transition-all ${
                       pair === p
-                        ? 'bg-[#4a90d9] text-white'
+                        ? 'bg-[#e63946] text-white'
                         : 'bg-[#0f111a] border border-[#2a2d3e] text-[#8888aa] hover:border-[#4a4d5e]'
                     }`}
                   >
@@ -778,7 +778,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
                     setPair(v); setPairInput('');
                   }
                 }}
-                className="flex-1 bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#4a90d9] placeholder-[#3a3d4e]"
+                className="flex-1 bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#e63946] placeholder-[#3a3d4e]"
               />
               <button
                 onClick={() => {
@@ -787,7 +787,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
                   if (!savedPairs.includes(v)) setSavedPairs(prev => [...prev, v]);
                   setPair(v); setPairInput('');
                 }}
-                className="px-3 py-2 rounded-lg bg-[#0f111a] border border-[#2a2d3e] text-[#4a90d9] text-xs font-bold hover:border-[#4a90d9] transition-all"
+                className="px-3 py-2 rounded-lg bg-[#0f111a] border border-[#2a2d3e] text-[#e63946] text-xs font-bold hover:border-[#e63946] transition-all"
                 title="Save to list"
               >+ Save</button>
             </div>
@@ -839,7 +839,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
                 key={tag} onClick={() => togglePsych(tag)}
                 className={`py-1.5 px-3.5 rounded-full text-xs font-semibold transition-all ${
                   psych.includes(tag)
-                    ? 'bg-[#4a90d9] text-white shadow shadow-[rgba(74,144,217,0.4)]'
+                    ? 'bg-[#e63946] text-white shadow shadow-[rgba(230,57,70,0.4)]'
                     : 'bg-[#0f111a] border border-[#2a2d3e] text-[#8888aa] hover:border-[#4a4d5e]'
                 }`}
               >
@@ -863,7 +863,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
               <input
                 type="number" placeholder="100" value={riskAmt}
                 onChange={e => setRiskAmt(e.target.value)}
-                className="w-full bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#4a90d9]"
+                className="w-full bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e63946]"
               />
             </div>
             <div>
@@ -871,7 +871,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
               <input
                 type="number" placeholder="20" value={sl}
                 onChange={e => setSl(e.target.value)}
-                className="w-full bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#4a90d9]"
+                className="w-full bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e63946]"
               />
             </div>
           </div>
@@ -955,7 +955,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
               <input
                 type="number" step="0.1" placeholder="2.5" value={rr}
                 onChange={e => setRr(e.target.value)}
-                className="flex-1 bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-[#4a90d9]"
+                className="flex-1 bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-[#e63946]"
               />
             </div>
           </div>
@@ -1051,7 +1051,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
             <button
               onClick={handleLog}
               className="w-full py-3 rounded-xl font-black text-sm tracking-widest transition-all hover:opacity-90 active:scale-[0.98]"
-              style={{ background: 'linear-gradient(135deg, #4a90d9, #00c896)', color: 'white' }}
+              style={{ background: 'linear-gradient(135deg, #e63946, #00c896)', color: 'white' }}
             >
               ✓ TAKE TRADE
             </button>
@@ -1279,7 +1279,7 @@ const HistoryModule = ({ trades, setTrades }) => {
                         {hasImages ? (
                           <div className="flex gap-3 flex-wrap">
                             {[
-                              { label: 'BEFORE', img: getImg(t, 'before'), color: '#4a90d9' },
+                              { label: 'BEFORE', img: getImg(t, 'before'), color: '#e63946' },
                               { label: 'AFTER',  img: getImg(t, 'after'),  color: '#00c896' },
                               { label: 'RESULT', img: getImg(t, 'result'), color: '#f5a623' },
                             ].filter(s => s.img).map(({ label, img, color }) => (
@@ -1290,7 +1290,7 @@ const HistoryModule = ({ trades, setTrades }) => {
                                   onClick={e => { e.stopPropagation(); setLightbox({ src: img, label }); }}
                                 >
                                   <img src={img} alt={label}
-                                    className="rounded-lg border border-[#2a2d3e] object-cover transition-all group-hover:border-[#4a90d9] group-hover:brightness-90"
+                                    className="rounded-lg border border-[#2a2d3e] object-cover transition-all group-hover:border-[#e63946] group-hover:brightness-90"
                                     style={{ maxHeight: 180, maxWidth: 280 }}
                                   />
                                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -1399,7 +1399,7 @@ const AnalyticsModule = ({ trades, backtestDate }) => {
         <div className="font-bold text-white mb-1">{m.label}</div>
         <div className="flex flex-col gap-0.5">
           <span className={`font-mono font-black ${m.pnl >= 0 ? 'text-[#00c896]' : 'text-[#ff4757]'}`}>{m.pnl >= 0 ? '+' : ''}${m.pnl.toFixed(2)}</span>
-          <span className="text-[#4a90d9]">{wr}% WR · {m.total} trades</span>
+          <span className="text-[#e63946]">{wr}% WR · {m.total} trades</span>
           <span className="text-[#5a5d7a]">{m.wins}W · {m.losses}L{m.be > 0 ? ` · ${m.be} BE` : ''}</span>
         </div>
       </div>
@@ -1449,7 +1449,7 @@ const AnalyticsModule = ({ trades, backtestDate }) => {
   const kpis = [
     { icon: <Activity size={16} />, label: 'Win Rate',     value: `${winRate}%`,                  sub: `${wins.length}W / ${losses.length}L`,  color: '#00c896' },
     { icon: <DollarSign size={16}/>, label: 'Total PnL',   value: `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toFixed(2)}`, sub: `${trades.length} trades`, color: totalPnL >= 0 ? '#00c896' : '#ff4757' },
-    { icon: <Award size={16} />,     label: 'Best Trade',  value: `1 : ${maxRR}`,                  sub: `Avg RR 1:${avgRR}`,                   color: '#4a90d9' },
+    { icon: <Award size={16} />,     label: 'Best Trade',  value: `1 : ${maxRR}`,                  sub: `Avg RR 1:${avgRR}`,                   color: '#e63946' },
     { icon: <Target size={16} />,    label: 'Total Trades',value: trades.length,                   sub: `${buys} Buy · ${sells} Sell`,          color: '#f5a623' },
   ];
 
@@ -1490,8 +1490,8 @@ const AnalyticsModule = ({ trades, backtestDate }) => {
             <LineChart data={equityData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <defs>
                 <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#4a90d9" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#4a90d9" stopOpacity={0} />
+                  <stop offset="5%"  stopColor="#e63946" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#e63946" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e2038" />
@@ -1505,9 +1505,9 @@ const AnalyticsModule = ({ trades, backtestDate }) => {
               />
               <Tooltip content={<EqTooltip />} />
               <Line
-                type="monotone" dataKey="cumPnl" stroke="#4a90d9" strokeWidth={2.5}
-                dot={{ fill: '#4a90d9', r: 3, strokeWidth: 0 }}
-                activeDot={{ r: 5, fill: '#4a90d9' }}
+                type="monotone" dataKey="cumPnl" stroke="#e63946" strokeWidth={2.5}
+                dot={{ fill: '#e63946', r: 3, strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: '#e63946' }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -1560,7 +1560,7 @@ const AnalyticsModule = ({ trades, backtestDate }) => {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-black font-mono" style={{ color: pnlColor }}>{s.pnl >= 0 ? '+' : ''}${s.pnl.toFixed(2)}</span>
-                      <span className="text-[10px] font-bold text-[#4a90d9]">{s.winRate}% WR</span>
+                      <span className="text-[10px] font-bold text-[#e63946]">{s.winRate}% WR</span>
                     </div>
                   </div>
                   <div className="flex h-2 rounded-full overflow-hidden mb-2 bg-[#1e2038]">
@@ -1606,7 +1606,7 @@ const AnalyticsModule = ({ trades, backtestDate }) => {
                   <div className="text-[9px] font-mono font-bold w-14 text-right" style={{ color: pnlColor }}>
                     {d.total > 0 ? `${d.pnl >= 0 ? '+' : ''}$${d.pnl.toFixed(0)}` : '—'}
                   </div>
-                  <div className="text-[9px] font-bold w-9 text-right text-[#4a90d9]">
+                  <div className="text-[9px] font-bold w-9 text-right text-[#e63946]">
                     {d.total > 0 ? `${wr}%` : '—'}
                   </div>
                 </div>
@@ -1667,7 +1667,7 @@ const AnalyticsModule = ({ trades, backtestDate }) => {
                 <span className="text-[10px] font-mono font-bold text-right" style={{ color: pnlColor }}>
                   {m.pnl >= 0 ? '+' : ''}${m.pnl.toFixed(0)}
                 </span>
-                <span className="text-[10px] font-bold text-[#4a90d9] text-right">{active > 0 ? `${wr}%` : '—'}</span>
+                <span className="text-[10px] font-bold text-[#e63946] text-right">{active > 0 ? `${wr}%` : '—'}</span>
               </div>
             );
           })}
@@ -1708,7 +1708,7 @@ const AnalyticsModule = ({ trades, backtestDate }) => {
             return (
               <div
                 key={day}
-                className={`flex items-center justify-center rounded-md text-[11px] font-semibold aspect-square transition-all ${bg} ${isToday ? 'ring-1 ring-[#4a90d9] ring-offset-1 ring-offset-[#161829]' : ''}`}
+                className={`flex items-center justify-center rounded-md text-[11px] font-semibold aspect-square transition-all ${bg} ${isToday ? 'ring-1 ring-[#e63946] ring-offset-1 ring-offset-[#161829]' : ''}`}
                 title={results.length > 0 ? `${results.length} trade${results.length > 1 ? 's' : ''}` : undefined}
               >
                 {day}
@@ -1783,10 +1783,10 @@ export default function App() {
   useEffect(() => { localStorage.setItem('profx_date',    JSON.stringify(date));          }, [date]);
 
   const tabs = [
-    { id: 'journal',   label: 'Journal',   icon: <BookOpen  size={15} /> },
-    { id: 'weekly',    label: 'Weekly',    icon: <Newspaper size={15} /> },
-    { id: 'history',   label: 'History',   icon: <Activity  size={15} /> },
-    { id: 'analytics', label: 'Analytics', icon: <BarChart2 size={15} /> },
+    { id: 'journal',   label: 'Journal',        icon: <BookOpen    size={15} /> },
+    { id: 'weekly',    label: 'Weekly Outlook',  icon: <LayoutGrid  size={15} /> },
+    { id: 'history',   label: 'History',         icon: <Calendar    size={15} /> },
+    { id: 'analytics', label: 'Analytics',       icon: <BarChart2   size={15} /> },
   ];
 
   const [sysDiscordStatus, setSysDiscordStatus] = useState('idle');
@@ -1876,30 +1876,33 @@ export default function App() {
     <div className="min-h-screen bg-[#0f111a]">
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-40 border-b border-[#1e2038] bg-[#13151f]/95 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4 flex-wrap">
+      <header className="sticky top-0 z-40 border-b border-[#1a1a1a] bg-[#0a0a0a]/95 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
 
-          {/* Logo */}
-          <div className="flex items-center gap-3 mr-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #4a90d9, #00c896)' }}>
-              <TrendingUp size={16} className="text-white" />
+          {/* A+ Logo */}
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center border border-[#e63946]/30"
+              style={{ background: 'rgba(230,57,70,0.1)' }}>
+              <Coffee size={17} className="text-[#e63946]" />
             </div>
             <div>
-              <div className="text-white font-black text-sm tracking-wider leading-none">ProFx</div>
-              <div className="text-[#5a5d7a] text-[9px] tracking-widest uppercase">Backtesting Journal</div>
+              <div className="font-black text-xl leading-none text-[#e63946]">A+</div>
+              <div className="text-[9px] leading-none mt-0.5" style={{ color: '#555' }}>Confirm your trade setup before entry</div>
             </div>
           </div>
 
-          {/* Tabs */}
-          <nav className="flex gap-1">
+          {/* Nav */}
+          <nav className="ml-auto flex items-center gap-1">
+            <button className="p-2 rounded-lg text-[#555] hover:text-white hover:bg-[#1a1a1a] transition-all mr-1">
+              <Sun size={15} />
+            </button>
             {tabs.map(t => (
               <button
                 key={t.id} onClick={() => setTab(t.id)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
                   tab === t.id
-                    ? 'bg-[#4a90d9] text-white shadow shadow-[rgba(74,144,217,0.4)]'
-                    : 'text-[#8888aa] hover:text-white hover:bg-[#1e2038]'
+                    ? 'text-white bg-[rgba(230,57,70,0.1)] border border-[rgba(230,57,70,0.2)]'
+                    : 'text-[#666] border border-transparent hover:text-white hover:bg-[#1a1a1a]'
                 }`}
               >
                 {t.icon}{t.label}
@@ -1907,73 +1910,60 @@ export default function App() {
             ))}
           </nav>
 
-          {/* System Total widget */}
-          <div className="ml-auto flex flex-col gap-1 bg-[#161829] border border-[#2a2d3e] rounded-xl px-3 py-2 min-w-[180px]">
-            {/* Top row: label + trade count */}
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#5a5d7a]">System Total</span>
-              <span className="text-[9px] font-bold text-[#8888aa]">
-                <span className="text-white font-black">{trades.length}</span>
-                <span className="text-[#3a3d4e]"> / {GOAL}</span>
-              </span>
-            </div>
+          {/* Compact stats + Discord + Login */}
+          <div className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[9px] border border-[#1a1a1a] bg-[#111]">
+            <span className="font-mono font-bold text-white">{trades.length}<span className="text-[#333]">/{GOAL}</span></span>
+            <span className="w-px h-3 bg-[#222]" />
+            <span className={`font-mono font-bold ${totalPnL >= 0 ? 'text-[#00c896]' : 'text-[#ff4757]'}`}>
+              {totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(0)}
+            </span>
+            <span className="w-px h-3 bg-[#222]" />
+            <span style={{ color: '#555' }}>{winRate}% WR</span>
+            <span className="w-px h-3 bg-[#222]" />
+            <div className="relative flex items-center gap-0.5">
+              <button
+                onClick={sendSystemToDiscord}
+                disabled={sysDiscordStatus === 'sending'}
+                title="Send system report to Discord"
+                className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold transition-all text-[#5865F2] ${
+                  sysDiscordStatus === 'sent'    ? '!text-[#00c896]' :
+                  sysDiscordStatus === 'error'   ? '!text-[#ff4757]' :
+                  sysDiscordStatus === 'sending' ? 'opacity-60' :
+                  'hover:bg-[rgba(88,101,242,0.15)]'
+                }`}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963.021-.04.001-.088-.041-.104a13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028z"/>
+                </svg>
+                {sysDiscordStatus === 'sent' ? '✓' : sysDiscordStatus === 'error' ? '✗' : sysDiscordStatus === 'sending' ? '…' : 'Report'}
+              </button>
+              <button onClick={() => { setSysWebhookInput(sysWebhookUrl); setShowSysSettings(v => !v); }}
+                className="p-0.5 rounded text-[#5865F2] hover:bg-[rgba(88,101,242,0.15)] transition-all text-[10px]" title="Discord settings">⚙</button>
 
-            {/* Progress bar */}
-            <div className="w-full h-1 bg-[#2a2d3e] rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all"
-                style={{ width: `${progress}%`, background: 'linear-gradient(90deg,#4a90d9,#00c896)' }}
-              />
-            </div>
-
-            {/* Stats row */}
-            <div className="flex items-center gap-2 pt-0.5">
-              <span className="text-[9px] text-[#00c896] font-bold">{winRate}% WR</span>
-              <span className="w-px h-2.5 bg-[#2a2d3e]" />
-              <span className={`text-[9px] font-bold font-mono ${totalPnL >= 0 ? 'text-[#00c896]' : 'text-[#ff4757]'}`}>
-                {totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}
-              </span>
-              <span className="w-px h-2.5 bg-[#2a2d3e]" />
-              {/* Discord send + settings */}
-              <div className="ml-auto flex items-center gap-1 relative">
-                <button
-                  onClick={sendSystemToDiscord}
-                  disabled={sysDiscordStatus === 'sending'}
-                  title="Send full system report to Discord"
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold transition-all ${
-                    sysDiscordStatus === 'sent'    ? 'bg-[rgba(0,200,150,0.15)] text-[#00c896]' :
-                    sysDiscordStatus === 'error'   ? 'bg-[rgba(255,71,87,0.15)] text-[#ff4757]' :
-                    sysDiscordStatus === 'sending' ? 'text-[#5865F2] opacity-60' :
-                    sysWebhookUrl ? 'bg-[rgba(88,101,242,0.15)] text-[#5865F2]' :
-                    'text-[#5865F2] hover:bg-[rgba(88,101,242,0.15)]'
-                  }`}
-                >
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963.021-.04.001-.088-.041-.104a13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"/>
-                  </svg>
-                  {sysDiscordStatus === 'sent' ? '✓ Sent' : sysDiscordStatus === 'error' ? '✗ Fail' : sysDiscordStatus === 'sending' ? '...' : sysWebhookUrl ? 'Connected ●' : 'Report'}
-                </button>
-                <button onClick={() => { setSysWebhookInput(sysWebhookUrl); setShowSysSettings(v => !v); }}
-                  className="px-1 py-0.5 rounded text-[#5865F2] hover:bg-[rgba(88,101,242,0.15)] transition-all text-[10px]" title="Discord settings">⚙</button>
-
-                {showSysSettings && (
-                  <div className="absolute right-0 top-full mt-2 w-72 p-3 rounded-xl z-50 space-y-2"
-                    style={{ background: '#13151f', border: '1px solid rgba(88,101,242,0.3)', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
-                    <div className="text-[10px] text-[#5a5d7a] uppercase tracking-widest">System Report Webhook</div>
-                    <input type="text" value={sysWebhookInput} onChange={e => setSysWebhookInput(e.target.value)}
-                      placeholder="https://discord.com/api/webhooks/..."
-                      className="w-full bg-[#0f111a] border border-[#2a2d3e] text-white font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[#5865F2] placeholder-[#3a3d4e]" />
-                    <div className="flex gap-2">
-                      <button onClick={() => { localStorage.removeItem('profx-sys-webhook'); setSysWebhookUrl(''); setSysWebhookInput(''); setShowSysSettings(false); }}
-                        className="flex-1 py-1.5 rounded-lg text-xs font-bold text-[#5a5d7a] hover:text-white border border-[#2a2d3e] transition-colors">Clear</button>
-                      <button onClick={() => { const u = sysWebhookInput.trim(); localStorage.setItem('profx-sys-webhook', u); setSysWebhookUrl(u); setShowSysSettings(false); }}
-                        className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white transition-colors" style={{ background: '#5865F2' }}>Save</button>
-                    </div>
+              {showSysSettings && (
+                <div className="absolute right-0 top-full mt-2 w-72 p-3 rounded-xl z-50 space-y-2"
+                  style={{ background: '#0d0d0d', border: '1px solid rgba(88,101,242,0.3)', boxShadow: '0 8px 24px rgba(0,0,0,0.6)' }}>
+                  <div className="text-[10px] uppercase tracking-widest" style={{ color: '#555' }}>System Report Webhook</div>
+                  <input type="text" value={sysWebhookInput} onChange={e => setSysWebhookInput(e.target.value)}
+                    placeholder="https://discord.com/api/webhooks/..."
+                    className="w-full bg-[#111] border border-[#1a1a1a] text-white font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[#5865F2] placeholder-[#333]" />
+                  <div className="flex gap-2">
+                    <button onClick={() => { localStorage.removeItem('profx-sys-webhook'); setSysWebhookUrl(''); setSysWebhookInput(''); setShowSysSettings(false); }}
+                      className="flex-1 py-1.5 rounded-lg text-xs font-bold text-[#555] hover:text-white border border-[#1a1a1a] transition-colors">Clear</button>
+                    <button onClick={() => { const u = sysWebhookInput.trim(); localStorage.setItem('profx-sys-webhook', u); setSysWebhookUrl(u); setShowSysSettings(false); }}
+                      className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white transition-colors" style={{ background: '#5865F2' }}>Save</button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
+
+          {/* Login button */}
+          <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all"
+            style={{ background: '#e63946' }}>
+            <LogIn size={14} />
+            Login
+          </button>
         </div>
       </header>
 
