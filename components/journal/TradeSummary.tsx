@@ -1,10 +1,11 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useSabar } from "@/store/SabarContext";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { sendTradeToDiscord } from "@/lib/discord";
-import { Send, CheckCircle, XCircle, Settings, Lock, Clock, Upload, X } from "lucide-react";
+import { Send, CheckCircle, XCircle, Settings, Lock, Clock } from "lucide-react";
 
 const WEBHOOK_KEY = "sabar-discord-webhook";
 const DAILY_LIMIT = 2;
@@ -31,73 +32,13 @@ function useCountdownToMidnight() {
 
 export function TradeSummary() {
   const { state, dispatch } = useSabar();
-  const [notes, setNotes]         = useState("");
-  const [outcome, setOutcome]     = useState<"WIN" | "LOSS" | "BE">("WIN");
-  const [pnl, setPnl]             = useState<string>("");
-  const [lotSize, setLotSize]     = useState<string>("");
-  const [rr, setRr]               = useState<string>("2");
-  const [riskPct, setRiskPct]     = useState<string>("1");
-  const [slPips, setSlPips]       = useState<string>("");
-  const [showModal, setShowModal] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [actionType, setActionType] = useState<"TAKE" | "SKIP">("TAKE");
-  const [webhookUrl, setWebhookUrl]   = useState("");
-  const [webhookInput, setWebhookInput] = useState("");
-  const [sendStatus, setSendStatus] = useState<"idle" | "sending" | "ok" | "error">("idle");
-  const [manualUnlock, setManualUnlock] = useState(false);
+  const router = useRouter();
+  const [showSettings,      setShowSettings]      = useState(false);
+  const [webhookUrl,        setWebhookUrl]        = useState("");
+  const [webhookInput,      setWebhookInput]      = useState("");
+  const [sendStatus,        setSendStatus]        = useState<"idle" | "sending" | "ok" | "error">("idle");
+  const [manualUnlock,      setManualUnlock]      = useState(false);
   const [showUnlockConfirm, setShowUnlockConfirm] = useState(false);
-  const [imgBefore, setImgBefore] = useState<string | null>(null);
-  const [imgAfter,  setImgAfter]  = useState<string | null>(null);
-  const [dragOver,  setDragOver]  = useState<"before" | "after" | null>(null);
-  const fileRefBefore = useRef<HTMLInputElement>(null);
-  const fileRefAfter  = useRef<HTMLInputElement>(null);
-
-  function readImg(which: "before" | "after", file?: File | null) {
-    if (!file || !file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const result = e.target?.result as string;
-      which === "before" ? setImgBefore(result) : setImgAfter(result);
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function onPaste(which: "before" | "after") {
-    return (e: React.ClipboardEvent) => {
-      const file = Array.from(e.clipboardData.files).find(f => f.type.startsWith("image/"));
-      if (file) readImg(which, file);
-    };
-  }
-
-  const countdown = useCountdownToMidnight();
-
-  // Auto-calculate P&L from Risk % and R:R
-  useEffect(() => {
-    const totalPnlSoFar = state.trades.reduce((s, t) => s + (t.pnl ?? 0), 0);
-    const balance = state.accountBalance + totalPnlSoFar;
-    const risk = parseFloat(riskPct) || state.riskPercent;
-    const rrVal = parseFloat(rr);
-    const riskDollar = balance * (risk / 100);
-    if (outcome === "WIN" && rrVal > 0) {
-      setPnl((riskDollar * rrVal).toFixed(2));
-    } else if (outcome === "LOSS") {
-      setPnl((-riskDollar).toFixed(2));
-    } else if (outcome === "BE") {
-      setPnl("0");
-    }
-  }, [outcome, riskPct, rr, state.riskPercent, state.accountBalance, state.trades]);
-
-  // Auto-calculate Lot Size from Risk $ ÷ (SL Pips × 10)
-  useEffect(() => {
-    const totalPnlSoFar = state.trades.reduce((s, t) => s + (t.pnl ?? 0), 0);
-    const balance = state.accountBalance + totalPnlSoFar;
-    const risk = parseFloat(riskPct) || state.riskPercent;
-    const sl = parseFloat(slPips);
-    if (sl > 0) {
-      const riskDollar = balance * (risk / 100);
-      setLotSize((riskDollar / (sl * 10)).toFixed(2));
-    }
-  }, [riskPct, slPips, state.riskPercent, state.accountBalance, state.trades]);
 
   useEffect(() => {
     const saved = localStorage.getItem(WEBHOOK_KEY) ?? "";
@@ -105,52 +46,43 @@ export function TradeSummary() {
     setWebhookInput(saved);
   }, []);
 
-  const today      = new Date().toISOString().split("T")[0];
-  const todayTakes = state.trades.filter(t => t.decision === "TAKE" && t.date === today);
-  const isLocked   = todayTakes.length >= DAILY_LIMIT && !manualUnlock;
+  const countdown        = useCountdownToMidnight();
+  const today            = new Date().toISOString().split("T")[0];
+  const todayTakes       = state.trades.filter(t => t.decision === "TAKE" && t.date === today);
+  const isLocked         = todayTakes.length >= DAILY_LIMIT && !manualUnlock;
+  const checkedRules     = state.rules.filter(r => r.checked);
+  const totalRules       = state.rules.length;
+  const pct              = totalRules > 0 ? Math.round((checkedRules.length / totalRules) * 100) : 0;
+  const isBull           = state.currentBias === "BULLISH";
+  const biasColor        = isBull ? "#00FF7F" : "#FF3B3B";
+  const biasGlow         = isBull ? "0 0 16px 3px rgba(0,255,127,0.4)" : "0 0 16px 3px rgba(255,59,59,0.4)";
+  const biasAnim         = isBull ? "anim-glow-green" : "anim-glow-red";
+  const totalPnl         = state.trades.reduce((s, t) => s + (t.pnl ?? 0), 0);
+  const currentBalance   = state.accountBalance + totalPnl;
+  const pctColor         = pct === 100 ? "#00FF7F" : pct >= 80 ? "#6AECE1" : pct >= 50 ? "#F59E0B" : "#FF3B3B";
 
-  const checkedRules   = state.rules.filter(r => r.checked);
-  const totalRules     = state.rules.length;
-  const pct            = totalRules > 0 ? Math.round((checkedRules.length / totalRules) * 100) : 0;
-  const isBull         = state.currentBias === "BULLISH";
-  const biasColor      = isBull ? "#00FF7F" : "#FF3B3B";
-  const biasGlow       = isBull ? "0 0 16px 3px rgba(0,255,127,0.4)" : "0 0 16px 3px rgba(255,59,59,0.4)";
-  const biasAnim       = isBull ? "anim-glow-green" : "anim-glow-red";
-  const totalPnl       = state.trades.reduce((s, t) => s + (t.pnl ?? 0), 0);
-  const currentBalance = state.accountBalance + totalPnl;
-
-  const handleAction = (type: "TAKE" | "SKIP") => { setActionType(type); setShowModal(true); };
-
-  const confirmAction = async () => {
-    const parsedPnl = pnl !== "" ? parseFloat(pnl) : undefined;
+  const handleAction = async (type: "TAKE" | "SKIP") => {
     dispatch({
-      type: actionType === "TAKE" ? "TAKE_TRADE" : "SKIP_TRADE",
-      payload: {
-        outcome:    actionType === "TAKE" ? outcome : undefined,
-        notes:      notes.trim() || undefined,
-        pnl:        parsedPnl,
-        lotSize:    lotSize !== "" ? parseFloat(lotSize) : undefined,
-        rr:         rr      !== "" ? parseFloat(rr)      : 0,
-        riskPercent: riskPct !== "" ? parseFloat(riskPct) : state.riskPercent,
-        imgBefore:  imgBefore ?? undefined,
-        imgAfter:   imgAfter  ?? undefined,
-      },
+      type: type === "TAKE" ? "TAKE_TRADE" : "SKIP_TRADE",
+      payload: { rr: 0 },
     });
-    if (webhookUrl) {
+
+    if (webhookUrl && type === "TAKE") {
       setSendStatus("sending");
       try {
         await sendTradeToDiscord(webhookUrl, {
           pair: state.currentPair, bias: state.currentBias, session: state.currentSession,
-          decision: actionType, outcome: actionType === "TAKE" ? outcome : undefined,
-          pnl: parsedPnl, rr: 0, checkedCount: checkedRules.length, totalRules,
-          notes: notes.trim() || undefined, accountBalance: currentBalance,
+          decision: type, outcome: undefined,
+          pnl: undefined, rr: 0, checkedCount: checkedRules.length, totalRules,
+          notes: undefined, accountBalance: currentBalance,
           riskAmount: (currentBalance * state.riskPercent) / 100,
         });
         setSendStatus("ok");
       } catch { setSendStatus("error"); }
       setTimeout(() => setSendStatus("idle"), 3000);
     }
-    setNotes(""); setOutcome("WIN"); setPnl(""); setLotSize(""); setRr("2"); setRiskPct("1"); setSlPips(""); setImgBefore(null); setImgAfter(null); setShowModal(false);
+
+    router.push("/history");
   };
 
   const saveWebhook = () => {
@@ -158,8 +90,6 @@ export function TradeSummary() {
     setWebhookUrl(webhookInput);
     setShowSettings(false);
   };
-
-  const pctColor = pct === 100 ? "#00FF7F" : pct >= 80 ? "#6AECE1" : pct >= 50 ? "#F59E0B" : "#FF3B3B";
 
   return (
     <>
@@ -210,27 +140,10 @@ export function TradeSummary() {
         {/* Trade info */}
         <div className="flex-1 space-y-2">
           {[
-            {
-              label: "Direction",
-              value: isBull ? "↑ BULLISH" : "↓ BEARISH",
-              color: biasColor,
-            },
-            {
-              label: "Session",
-              value: state.currentSession === "LONDON" ? "London" : "New York",
-              color: "#fff",
-            },
-            {
-              label: "Pair",
-              value: state.currentPair,
-              color: biasColor,
-            },
-            {
-              label: "Rules",
-              value: `${checkedRules.length}/${totalRules}`,
-              extra: `${pct}%`,
-              extraColor: pctColor,
-            },
+            { label: "Direction", value: isBull ? "↑ BULLISH" : "↓ BEARISH", color: biasColor },
+            { label: "Session",   value: state.currentSession === "LONDON" ? "London" : "New York", color: "#fff" },
+            { label: "Pair",      value: state.currentPair, color: biasColor },
+            { label: "Rules",     value: `${checkedRules.length}/${totalRules}`, extra: `${pct}%`, extraColor: pctColor },
             ...(state.currentPsychology.length > 0
               ? [{ label: "Psych", value: state.currentPsychology.join(", "), color: "#A0A0A0" }]
               : []),
@@ -244,7 +157,6 @@ export function TradeSummary() {
             </div>
           ))}
 
-          {/* Trades today */}
           <div className="flex justify-between items-center font-mono text-sm pt-2 border-t" style={{ borderColor: "#1A1A1A" }}>
             <span style={{ color: "#555" }}>Trades Today</span>
             <span style={{ color: todayTakes.length >= DAILY_LIMIT ? "#FF3B3B" : todayTakes.length === DAILY_LIMIT - 1 ? "#F59E0B" : "#00FF7F", fontWeight: 700 }}>
@@ -253,7 +165,7 @@ export function TradeSummary() {
           </div>
         </div>
 
-        {/* LOCKED */}
+        {/* Action buttons */}
         {isLocked ? (
           <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,59,59,0.35)" }}>
             <div className="flex flex-col items-center py-4 gap-1.5" style={{ background: "rgba(255,59,59,0.08)" }}>
@@ -291,61 +203,6 @@ export function TradeSummary() {
         )}
       </div>
 
-      {/* Confirm modal */}
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={actionType === "TAKE" ? "Confirm Trade" : "Skip Trade"}>
-        <div className="space-y-4">
-          {actionType === "TAKE" && (
-            <>
-              <div>
-                <label className="font-mono text-xs text-[#A0A0A0] uppercase tracking-widest block mb-2">Outcome</label>
-                <div className="flex gap-2">
-                  {(["WIN", "LOSS", "BE"] as const).map(o => (
-                    <button key={o} onClick={() => setOutcome(o)}
-                      className={`flex-1 py-2 rounded-lg font-mono text-sm font-bold border transition-colors ${
-                        outcome === o
-                          ? o === "WIN"  ? "bg-[#00FF7F] text-black border-[#00FF7F]"
-                          : o === "LOSS" ? "bg-[#FF3B3B] text-white border-[#FF3B3B]"
-                          :                "bg-[#6AECE1] text-black border-[#6AECE1]"
-                          : "bg-[#1A1A1A] text-[#A0A0A0] border-[#2A2A2A] hover:text-white"
-                      }`}>
-                      {o}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="font-mono text-xs text-[#A0A0A0] uppercase tracking-widest block mb-2">P&L ($)</label>
-                <div className="flex items-center gap-2 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-3 py-2 focus-within:border-[#6AECE1]">
-                  <span className="font-mono text-sm text-[#555]">$</span>
-                  <input type="number" step="0.01" value={pnl} onChange={e => setPnl(e.target.value)}
-                    placeholder="0.00"
-                    className="flex-1 bg-transparent font-mono text-sm text-white focus:outline-none placeholder-[#444]" />
-                </div>
-                <p className="font-mono text-[10px] text-[#444] mt-1">Negative for a loss, e.g. -50.00</p>
-              </div>
-
-            </>
-          )}
-
-          <div>
-            <label className="font-mono text-xs text-[#A0A0A0] uppercase tracking-widest block mb-2">Notes (optional)</label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)}
-              placeholder="Trade rationale..." rows={3}
-              className="w-full bg-[#1A1A1A] border border-[#2A2A2A] text-white font-mono text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-[#6AECE1] placeholder-[#A0A0A0] resize-none" />
-          </div>
-          {webhookUrl && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "rgba(88,101,242,0.1)", border: "1px solid rgba(88,101,242,0.3)" }}>
-              <Send size={12} style={{ color: "#5865F2" }} />
-              <span className="font-mono text-[11px]" style={{ color: "#5865F2" }}>Will auto-send to Discord on confirm</span>
-            </div>
-          )}
-          <div className="flex gap-2">
-            <Button variant="ghost" className="flex-1" onClick={() => setShowModal(false)}>Cancel</Button>
-            <Button variant={actionType === "TAKE" ? "take" : "skip"} className="flex-1" onClick={confirmAction}>Confirm</Button>
-          </div>
-        </div>
-      </Modal>
-
       {/* Unlock confirmation modal */}
       <Modal open={showUnlockConfirm} onClose={() => setShowUnlockConfirm(false)} title="Override Daily Limit">
         <div className="space-y-4">
@@ -370,12 +227,6 @@ export function TradeSummary() {
               placeholder="https://discord.com/api/webhooks/..."
               className="w-full bg-[#1A1A1A] border border-[#2A2A2A] text-white font-mono text-xs px-3 py-2.5 rounded-lg focus:outline-none focus:border-[#5865F2] placeholder-[#444]" />
             <p className="font-mono text-[10px] text-[#444] mt-1.5">Discord → Edit Channel → Integrations → Webhooks → New Webhook → Copy URL</p>
-          </div>
-          <div className="rounded-lg px-3 py-3 space-y-1" style={{ background: "rgba(88,101,242,0.08)", border: "1px solid rgba(88,101,242,0.2)" }}>
-            <p className="font-mono text-[10px] font-bold" style={{ color: "#5865F2" }}>HOW TO GET YOUR WEBHOOK</p>
-            {["1. Open Discord → your server","2. Right-click a channel → Edit Channel","3. Integrations → Webhooks → New Webhook","4. Copy Webhook URL → paste above"].map(s => (
-              <p key={s} className="font-sans text-[11px] text-[#888]">{s}</p>
-            ))}
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" className="flex-1" onClick={() => { setWebhookInput(""); localStorage.removeItem(WEBHOOK_KEY); setWebhookUrl(""); setShowSettings(false); }}>Clear</Button>
