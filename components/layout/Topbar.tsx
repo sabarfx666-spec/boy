@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { LayoutDashboard, BarChart2, ScrollText, CalendarDays, Globe, User, Clock, LogOut, ChevronDown, Shield, TrendingUp, BookOpen, Sun, Moon, Target } from "lucide-react";
 import { useAuth } from "@/store/AuthContext";
+import { useSabar } from "@/store/SabarContext";
 
 const navItems = [
   { href: "/",        label: "Dashboard",      icon: LayoutDashboard },
@@ -14,16 +15,14 @@ const navItems = [
 
 function LiveClock() {
   const [now, setNow] = useState<Date | null>(null);
+  const { state, dispatch } = useSabar();
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setNow(new Date());
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
-
-  const dateStr = now
-    ? now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
-    : "---";
 
   const timeStr = now
     ? now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })
@@ -33,14 +32,40 @@ function LiveClock() {
     ? now.toLocaleTimeString("en-US", { timeZoneName: "short" }).split(" ").pop() ?? ""
     : "";
 
+  // Format selectedDate for display
+  const selectedDate = state.selectedDate
+    ? new Date(state.selectedDate + "T12:00:00")
+    : new Date();
+  const dateStr = selectedDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const isToday = state.selectedDate === new Date().toISOString().split("T")[0];
+
   return (
     <div className="flex items-center gap-2">
-      {/* Date */}
-      <div
-        className="px-3 py-1.5 rounded-lg font-mono text-xs font-semibold text-white"
-        style={{ background: "#111", border: "1px solid #222" }}
-      >
-        {dateStr}
+      {/* Clickable Date Picker */}
+      <div className="relative">
+        <button
+          onClick={() => dateInputRef.current?.showPicker?.() ?? dateInputRef.current?.click()}
+          className="px-3 py-1.5 rounded-lg font-mono text-xs font-semibold text-white flex items-center gap-1.5 transition-all hover:border-[#E53E3E]"
+          style={{
+            background: "#111",
+            border: `1px solid ${isToday ? "#222" : "#E53E3E"}`,
+            color: isToday ? "#fff" : "#E53E3E",
+          }}
+          title="Click to change journal date"
+        >
+          <CalendarDays size={11} strokeWidth={2.5} style={{ color: isToday ? "#555" : "#E53E3E" }} />
+          {dateStr}
+        </button>
+        <input
+          ref={dateInputRef}
+          type="date"
+          value={state.selectedDate}
+          onChange={e => {
+            if (e.target.value) dispatch({ type: "SET_DATE", payload: e.target.value });
+          }}
+          className="absolute opacity-0 pointer-events-none w-0 h-0"
+          style={{ top: "100%", left: 0 }}
+        />
       </div>
 
       {/* Time */}
