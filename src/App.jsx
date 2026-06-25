@@ -71,10 +71,10 @@ const calcLotSize = (risk, sl) => {
 };
 
 const calcGrade = (pct) => {
-  if (pct >= 85) return { label: 'A+', color: '#00c896', ring: 'rgba(0,200,150,0.4)', bg: 'rgba(0,200,150,0.08)' };
-  if (pct >= 70) return { label: 'B',  color: '#f5a623', ring: 'rgba(245,166,35,0.4)', bg: 'rgba(245,166,35,0.08)' };
-  if (pct >= 50) return { label: 'C',  color: '#f59e0b', ring: 'rgba(245,158,11,0.4)',  bg: 'rgba(245,158,11,0.08)'  };
-  return              { label: 'F',  color: '#ff4757', ring: 'rgba(255,71,87,0.4)',  bg: 'rgba(255,71,87,0.08)'  };
+  if (pct >= 90) return { label: 'A*', color: '#00c896', ring: 'rgba(0,200,150,0.4)', bg: 'rgba(0,200,150,0.08)' };
+  if (pct >= 70) return { label: 'B*', color: '#4a90d9', ring: 'rgba(74,144,217,0.4)', bg: 'rgba(74,144,217,0.08)' };
+  if (pct >= 50) return { label: 'C',  color: '#f5a623', ring: 'rgba(245,166,35,0.4)', bg: 'rgba(245,166,35,0.08)' };
+  return              { label: 'D',  color: '#ff4757', ring: 'rgba(255,71,87,0.4)',  bg: 'rgba(255,71,87,0.08)'  };
 };
 
 const calcPnL = (status, risk, rr) => {
