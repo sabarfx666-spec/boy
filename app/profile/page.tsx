@@ -1,10 +1,170 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSabar } from "@/store/SabarContext";
 import { Trade } from "@/store/types";
-import { ArrowLeft, User, TrendingUp, Target, BarChart2, Activity, Brain, Clock, BookOpen, Layers } from "lucide-react";
+import { ArrowLeft, User, TrendingUp, Target, BarChart2, Activity, Brain, Clock, BookOpen, Layers, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/store/AuthContext";
+
+function fmt(n: number) {
+  const abs = Math.abs(n);
+  const s = abs >= 1000 ? `${(abs / 1000).toFixed(1)}K` : abs.toFixed(0);
+  return (n < 0 ? "-$" : "+$") + s;
+}
+
+function TradeCalendar({ trades }: { trades: Trade[] }) {
+  const today = new Date();
+  const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+
+  const year  = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const monthName = viewDate.toLocaleString("default", { month: "long", year: "numeric" });
+
+  // Group taken trades by date
+  const dayData = useMemo(() => {
+    const map: Record<string, { pnl: number; count: number }> = {};
+    trades.filter(t => t.decision === "TAKE").forEach(t => {
+      if (!map[t.date]) map[t.date] = { pnl: 0, count: 0 };
+      map[t.date].pnl   += t.pnl ?? 0;
+      map[t.date].count += 1;
+    });
+    return map;
+  }, [trades]);
+
+  // Build calendar grid
+  const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells: (number | null)[] = [
+    ...Array(firstDay).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks: (number | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+
+  // Monthly stats
+  const monthlyTrades = trades.filter(t => {
+    const d = new Date(t.date);
+    return t.decision === "TAKE" && d.getFullYear() === year && d.getMonth() === month;
+  });
+  const monthlyPnl   = monthlyTrades.reduce((s, t) => s + (t.pnl ?? 0), 0);
+  const tradingDays  = new Set(monthlyTrades.map(t => t.date)).size;
+
+  const isThisMonth = year === today.getFullYear() && month === today.getMonth();
+
+  function prevMonth() { setViewDate(new Date(year, month - 1, 1)); }
+  function nextMonth() { setViewDate(new Date(year, month + 1, 1)); }
+  function goToday()   { setViewDate(new Date(today.getFullYear(), today.getMonth(), 1)); }
+
+  const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  return (
+    <div className="rounded-xl p-4" style={{ background: "#0D0D0D", border: "1px solid #1A1A1A" }}>
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors" style={{ color: "#555" }}>
+            <ChevronLeft size={15} />
+          </button>
+          <span className="font-mono text-sm font-bold text-white">{monthName}</span>
+          <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors" style={{ color: "#555" }}>
+            <ChevronRight size={15} />
+          </button>
+          {!isThisMonth && (
+            <button onClick={goToday} className="px-2.5 py-1 rounded-lg font-mono text-[10px] font-bold transition-colors"
+              style={{ background: "rgba(106,236,225,0.1)", border: "1px solid rgba(106,236,225,0.2)", color: "#6AECE1" }}>
+              This month
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="font-mono text-[10px] text-[#444] uppercase tracking-widest">Monthly P&L</p>
+            <p className="font-mono text-sm font-bold" style={{ color: monthlyPnl >= 0 ? "#00FF7F" : "#FF3B3B" }}>
+              {monthlyPnl === 0 ? "$0" : fmt(monthlyPnl)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="font-mono text-[10px] text-[#444] uppercase tracking-widest">Trading Days</p>
+            <p className="font-mono text-sm font-bold text-white">{tradingDays}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-8 gap-1 mb-1">
+        {DAY_HEADERS.map(d => (
+          <div key={d} className="text-center font-mono text-[10px] uppercase tracking-widest py-1" style={{ color: "#333" }}>{d}</div>
+        ))}
+        <div className="font-mono text-[10px] uppercase tracking-widest py-1 text-center" style={{ color: "#333" }}>Week</div>
+      </div>
+
+      {/* Calendar weeks */}
+      <div className="space-y-1">
+        {weeks.map((week, wi) => {
+          const weekPnl   = week.reduce((s, day) => {
+            if (!day) return s;
+            const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+            return s + (dayData[key]?.pnl ?? 0);
+          }, 0);
+          const weekDays  = week.filter(d => d !== null && (() => {
+            const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d!).padStart(2, "0")}`;
+            return (dayData[key]?.count ?? 0) > 0;
+          })()).length;
+
+          return (
+            <div key={wi} className="grid grid-cols-8 gap-1">
+              {week.map((day, di) => {
+                if (!day) return <div key={di} className="rounded-lg h-14" style={{ background: "#080808" }} />;
+                const key  = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                const data = dayData[key];
+                const isToday = isThisMonth && day === today.getDate();
+                const bg = !data ? "#0D0D0D"
+                  : data.pnl > 0 ? "rgba(0,255,127,0.12)"
+                  : data.pnl < 0 ? "rgba(255,59,59,0.18)"
+                  : "rgba(106,236,225,0.08)";
+                const border = isToday ? "1px solid rgba(106,236,225,0.5)"
+                  : !data ? "1px solid #141414"
+                  : data.pnl > 0 ? "1px solid rgba(0,255,127,0.2)"
+                  : data.pnl < 0 ? "1px solid rgba(255,59,59,0.25)"
+                  : "1px solid rgba(106,236,225,0.15)";
+                const pnlColor = data?.pnl != null
+                  ? data.pnl > 0 ? "#00FF7F" : data.pnl < 0 ? "#FF5555" : "#6AECE1"
+                  : "#333";
+
+                return (
+                  <div key={di} className="rounded-lg h-14 p-1.5 flex flex-col justify-between" style={{ background: bg, border }}>
+                    <span className="font-mono text-[9px]" style={{ color: isToday ? "#6AECE1" : "#444" }}>{day}</span>
+                    {data ? (
+                      <>
+                        <span className="font-mono text-[10px] font-bold leading-none" style={{ color: pnlColor }}>
+                          {fmt(data.pnl)}
+                        </span>
+                        <span className="font-mono text-[9px]" style={{ color: "#444" }}>{data.count} trade{data.count !== 1 ? "s" : ""}</span>
+                      </>
+                    ) : null}
+                  </div>
+                );
+              })}
+              {/* Week summary */}
+              <div className="rounded-lg h-14 p-1.5 flex flex-col justify-center items-center gap-0.5" style={{ background: "#080808", border: "1px solid #141414" }}>
+                <span className="font-mono text-[9px]" style={{ color: "#333" }}>Wk {wi + 1}</span>
+                {weekDays > 0 ? (
+                  <>
+                    <span className="font-mono text-[10px] font-bold" style={{ color: weekPnl >= 0 ? "#00FF7F" : "#FF5555" }}>
+                      {fmt(weekPnl)}
+                    </span>
+                    <span className="font-mono text-[9px]" style={{ color: "#333" }}>{weekDays}d</span>
+                  </>
+                ) : <span className="font-mono text-[9px]" style={{ color: "#222" }}>—</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function tradePct(t: Trade) {
   return t.totalRules > 0 ? Math.round((t.checkedCount / t.totalRules) * 100) : 0;
@@ -288,6 +448,12 @@ export default function ProfilePage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Trade Calendar */}
+      <div className="rounded-xl p-5" style={{ background: "#0D0D0D", border: "1px solid #1A1A1A" }}>
+        <SectionHeader icon={Calendar} title="Trade Calendar" sub="Monthly P&L heatmap by trading day" color="#6AECE1" />
+        <TradeCalendar trades={state.trades} />
       </div>
 
       {/* Visual Analytics */}
