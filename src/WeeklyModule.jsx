@@ -1,8 +1,18 @@
 import React, { useState, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Newspaper, Upload, X, Image } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Newspaper, Upload, X, Image } from 'lucide-react';
 import { getWeekEvents, getMondayOf, getWeekLabel, addWeeks } from './data/newsEvents.js';
 
 const DISCORD_WEBHOOK = import.meta.env.VITE_DISCORD_WEEKLY;
+
+const DEFAULT_HTF_RULES = [
+  { id: 1, text: 'Daily Bullish Order-flow +DOL', group: null },
+  { id: 2, text: 'Daily Order-flow +ICR',          group: 'A' },
+  { id: 3, text: 'Daily Order-flow +CRT',          group: 'A' },
+  { id: 4, text: 'Monday Up rule',                 group: null },
+  { id: 5, text: '4H Bullish A to B + POI+ ERL',  group: 'B' },
+  { id: 6, text: 'A to B +LQ:Engineering+ POI+ ERL', group: 'B' },
+  { id: 7, text: '4H Bullish Order-flow +CRT',    group: null },
+];
 
 const YEARS = [2022, 2023, 2024, 2025, 2026];
 
@@ -46,6 +56,12 @@ export default function WeeklyModule({ weeklyPlans, setWeeklyPlans, backtestDate
   const [webhookInput, setWebhookInput] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [pairInput, setPairInput] = useState('');
+  const [htfOpen,   setHtfOpen]   = useState(true);
+  const [htfRules,  setHtfRules]  = useState(() => {
+    try { return JSON.parse(localStorage.getItem('profx_htf_rules')) || DEFAULT_HTF_RULES; } catch { return DEFAULT_HTF_RULES; }
+  });
+  const [htfInput,  setHtfInput]  = useState('');
+  const saveHtfRules = (updated) => { setHtfRules(updated); localStorage.setItem('profx_htf_rules', JSON.stringify(updated)); };
   const [savedPairs, setSavedPairs] = useState(() => {
     try { return JSON.parse(localStorage.getItem('profx_saved_pairs')) || ['EUR/USD','GBP/USD','GBP/JPY']; } catch { return ['EUR/USD','GBP/USD','GBP/JPY']; }
   });
@@ -242,6 +258,117 @@ export default function WeeklyModule({ weeklyPlans, setWeeklyPlans, backtestDate
 
         {/* ── Left: Weekly Plan ── */}
         <div className="flex flex-col gap-4">
+
+          {/* HTF Bias */}
+          {(() => {
+            const checked = plan.htfChecked || [];
+            const total   = htfRules.length;
+            const count   = checked.length;
+            const toggle  = (id) => {
+              const next = checked.includes(id) ? checked.filter(x => x !== id) : [...checked, id];
+              setPlan('htfChecked', next);
+            };
+            const addRule = () => {
+              const text = htfInput.trim();
+              if (!text) return;
+              const newRule = { id: Date.now(), text, group: null };
+              saveHtfRules([...htfRules, newRule]);
+              setHtfInput('');
+            };
+            const removeRule = (id) => {
+              saveHtfRules(htfRules.filter(r => r.id !== id));
+              setPlan('htfChecked', checked.filter(x => x !== id));
+            };
+
+            return (
+              <div className="rounded-xl border border-[#2a2d3e] bg-[#161829] overflow-hidden">
+                {/* Header */}
+                <button
+                  onClick={() => setHtfOpen(v => !v)}
+                  className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[#1e2038] transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    {htfOpen ? <ChevronDown size={14} className="text-[#00c896]" /> : <ChevronUp size={14} className="text-[#00c896]" />}
+                    <span className="text-sm font-black text-white">HTF Bias</span>
+                  </div>
+                  <span className="text-xs font-black text-[#00c896]">{count}/{total}</span>
+                </button>
+
+                {htfOpen && (
+                  <div className="px-4 pb-4">
+                    <div className="text-[9px] font-bold uppercase tracking-widest text-[#3a3d4e] mb-3 pt-1 border-t border-[#1e2038]">
+                      Daily &amp; 4-Hour Timeframe
+                    </div>
+
+                    <div className="flex flex-col gap-0.5">
+                      {htfRules.map((rule, idx) => {
+                        const isChecked = checked.includes(rule.id);
+                        const prevGroup = htfRules[idx - 1]?.group;
+                        const nextGroup = htfRules[idx + 1]?.group;
+                        const inGroup   = !!rule.group;
+                        const groupStart = inGroup && rule.group !== prevGroup;
+                        const groupEnd   = inGroup && rule.group !== nextGroup;
+
+                        return (
+                          <div
+                            key={rule.id}
+                            className={`relative flex items-center gap-3 py-2.5 px-2 rounded-lg group cursor-pointer transition-colors hover:bg-[#1e2038] ${isChecked ? 'bg-[rgba(0,200,150,0.06)]' : ''}`}
+                            onClick={() => toggle(rule.id)}
+                          >
+                            {/* Either/Or bracket */}
+                            {inGroup && (
+                              <div className={`absolute left-0 w-0.5 bg-[#00c896] opacity-40 ${groupStart ? 'top-3' : 'top-0'} ${groupEnd ? 'bottom-3' : 'bottom-0'}`} />
+                            )}
+
+                            {/* Circle checkbox */}
+                            <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+                              isChecked
+                                ? 'border-[#00c896] bg-[#00c896]'
+                                : 'border-[#3a3d4e] bg-transparent'
+                            }`}>
+                              {isChecked && <div className="w-2 h-2 rounded-full bg-[#0f111a]" />}
+                            </div>
+
+                            <span className={`flex-1 text-xs font-semibold transition-colors ${isChecked ? 'text-white' : 'text-[#8888aa]'}`}>
+                              {rule.text}
+                            </span>
+
+                            {inGroup && (
+                              <span className="text-[8px] font-black px-1.5 py-0.5 rounded border border-[rgba(0,200,150,0.4)] text-[#00c896] flex-shrink-0">
+                                Either/Or
+                              </span>
+                            )}
+
+                            <button
+                              onClick={e => { e.stopPropagation(); removeRule(rule.id); }}
+                              className="opacity-0 group-hover:opacity-100 text-[#3a3d4e] hover:text-[#ff4757] transition-all text-xs ml-1"
+                            >×</button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Add Rule */}
+                    <div className="flex gap-2 mt-3 pt-2 border-t border-[#1e2038]">
+                      <input
+                        type="text"
+                        placeholder="+ Add Rule"
+                        value={htfInput}
+                        onChange={e => setHtfInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addRule()}
+                        onClick={e => e.stopPropagation()}
+                        className="flex-1 bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-1.5 text-xs text-white placeholder-[#3a3d4e] focus:outline-none focus:border-[#00c896]"
+                      />
+                      <button
+                        onClick={addRule}
+                        className="px-3 py-1.5 rounded-lg bg-[#0f111a] border border-[#2a2d3e] text-[#00c896] text-xs font-bold hover:border-[#00c896] transition-all"
+                      >Add</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Weekly Bias */}
           <div className="rounded-xl border border-[#2a2d3e] bg-[#161829] p-4">
