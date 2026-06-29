@@ -881,6 +881,26 @@ const JournalModule = ({ setTrades, date, setDate }) => {
             </div>
           </div>
 
+          {/* Outcome */}
+          <div className="mb-5">
+            <div className="text-[10px] text-[#5a5d7a] mb-2">Outcome</div>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { key: 'Win',        label: '✓ WIN',  active: 'bg-[#00c896] text-black',  inactive: 'bg-[#0f111a] border border-[#2a2d3e] text-[#5a5d7a] hover:border-[#00c896] hover:text-[#00c896]' },
+                { key: 'Loss',       label: '✗ LOSS', active: 'bg-[#ff4757] text-white',  inactive: 'bg-[#0f111a] border border-[#2a2d3e] text-[#5a5d7a] hover:border-[#ff4757] hover:text-[#ff4757]' },
+                { key: 'Break Even', label: '— BE',   active: 'bg-[#f5a623] text-black',  inactive: 'bg-[#0f111a] border border-[#2a2d3e] text-[#5a5d7a] hover:border-[#f5a623] hover:text-[#f5a623]' },
+              ].map(({ key, label, active, inactive }) => (
+                <button
+                  key={key}
+                  onClick={() => setOutcome(prev => prev === key ? null : key)}
+                  className={`py-2.5 rounded-xl text-xs font-black tracking-wider transition-all ${outcome === key ? active : inactive}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* PnL preview */}
           {previewPnL !== null && (
             <div className="mb-5 flex items-center justify-between p-4 rounded-lg bg-[#0f111a] border border-[#2a2d3e]">
