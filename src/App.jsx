@@ -810,6 +810,11 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           </div>
         </div>
 
+      </div>
+
+      {/* ── Right Column ── */}
+      <div className="flex flex-col gap-4">
+
         <RuleSection
           rules={biasRules} setter={setBiasRules}
           newVal={newBiasRule} setNew={setNewBiasRule}
@@ -826,11 +831,6 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           expanded={ltfExpanded} onToggle={() => setLtfExpanded(v => !v)}
           onCheckedChange={(c, t) => setLtfScore({ c, t })}
         />
-      </div>
-
-      {/* ── Right Column ── */}
-      <div className="flex flex-col gap-4">
-
 
         {/* Pre-Trade Summary */}
         <Card>
