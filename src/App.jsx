@@ -868,16 +868,29 @@ const JournalModule = ({ setTrades, date, setDate }) => {
             </div>
           </div>
 
-          {/* R:R */}
-          <div className="mb-5">
-            <div className="text-[10px] text-[#5a5d7a] mb-1.5">Risk : Reward Achieved</div>
-            <div className="flex items-center gap-2">
-              <span className="text-[#5a5d7a] text-sm font-mono">1 :</span>
-              <input
-                type="number" step="0.1" placeholder="2.5" value={rr}
-                onChange={e => setRr(e.target.value)}
-                className="flex-1 bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-3 text-base text-white font-mono focus:outline-none focus:border-[#e63946]"
-              />
+          {/* Risk Money + R:R */}
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            <div>
+              <div className="text-[10px] text-[#5a5d7a] mb-1.5">Risk Amount</div>
+              <div className="flex items-center gap-2">
+                <span className="text-[#5a5d7a] text-sm font-mono">$</span>
+                <input
+                  type="number" step="1" placeholder="100" value={riskAmt}
+                  onChange={e => setRiskAmt(e.target.value)}
+                  className="flex-1 bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-3 text-base text-white font-mono focus:outline-none focus:border-[#e63946]"
+                />
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] text-[#5a5d7a] mb-1.5">Risk : Reward</div>
+              <div className="flex items-center gap-2">
+                <span className="text-[#5a5d7a] text-sm font-mono">1:</span>
+                <input
+                  type="number" step="0.1" placeholder="2.5" value={rr}
+                  onChange={e => setRr(e.target.value)}
+                  className="flex-1 bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-3 text-base text-white font-mono focus:outline-none focus:border-[#e63946]"
+                />
+              </div>
             </div>
           </div>
 
