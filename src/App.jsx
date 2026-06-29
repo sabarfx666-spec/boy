@@ -71,10 +71,10 @@ const calcLotSize = (risk, sl) => {
 };
 
 const calcGrade = (pct) => {
-  if (pct >= 90) return { label: 'A*', color: '#00c896', ring: 'rgba(0,200,150,0.4)', bg: 'rgba(0,200,150,0.08)' };
-  if (pct >= 70) return { label: 'B*', color: '#a78bfa', ring: 'rgba(167,139,250,0.4)', bg: 'rgba(167,139,250,0.08)' };
-  if (pct >= 50) return { label: 'C',  color: '#f5a623', ring: 'rgba(245,166,35,0.4)', bg: 'rgba(245,166,35,0.08)' };
-  return              { label: 'D',  color: '#ff4757', ring: 'rgba(255,71,87,0.4)',  bg: 'rgba(255,71,87,0.08)'  };
+  if (pct >= 85) return { label: 'A+', color: '#00c896', ring: 'rgba(0,200,150,0.4)', bg: 'rgba(0,200,150,0.08)' };
+  if (pct >= 70) return { label: 'B+', color: '#a78bfa', ring: 'rgba(167,139,250,0.4)', bg: 'rgba(167,139,250,0.08)' };
+  if (pct >= 50) return { label: 'C-', color: '#f5a623', ring: 'rgba(245,166,35,0.4)', bg: 'rgba(245,166,35,0.08)' };
+  return              { label: 'D-', color: '#ff4757', ring: 'rgba(255,71,87,0.4)',  bg: 'rgba(255,71,87,0.08)'  };
 };
 
 const calcPnL = (status, risk, rr) => {
@@ -837,10 +837,10 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           </div>
           <div className="grid grid-cols-4 gap-2 text-center">
             {[
-              { g: 'A+', thr: '≥ 85%', c: '#00c896', bc: 'rgba(0,200,150,0.2)' },
-              { g: 'B',  thr: '≥ 70%', c: '#f5a623', bc: 'rgba(245,166,35,0.2)' },
-              { g: 'C',  thr: '≥ 50%', c: '#f59e0b', bc: 'rgba(245,158,11,0.2)' },
-              { g: 'F',  thr: '< 50%', c: '#ff4757', bc: 'rgba(255,71,87,0.2)'  },
+              { g: 'A+', thr: '≥ 85%', c: '#00c896', bc: 'rgba(0,200,150,0.2)'   },
+              { g: 'B+', thr: '≥ 70%', c: '#a78bfa', bc: 'rgba(167,139,250,0.2)' },
+              { g: 'C-', thr: '≥ 50%', c: '#f5a623', bc: 'rgba(245,166,35,0.2)'  },
+              { g: 'D-', thr: '< 50%', c: '#ff4757', bc: 'rgba(255,71,87,0.2)'   },
             ].map(t => (
               <div
                 key={t.g}
