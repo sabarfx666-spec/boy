@@ -423,8 +423,8 @@ const JournalModule = ({ setTrades, date, setDate }) => {
   const [outcome,     setOutcome]     = useState(null);
   const [imgBefore,   setImgBefore]   = useState(null);
   const [imgAfter,    setImgAfter]    = useState(null);
-  const [imgResult,   setImgResult]   = useState(null);
-  const [videoUrl,    setVideoUrl]    = useState(null);
+  const [imgDaily,    setImgDaily]    = useState(null);
+  const [imgWeekly,   setImgWeekly]   = useState(null);
   const [webhookUrl,  setWebhookUrl]  = useState(() => localStorage.getItem('profx-discord-webhook') ?? TRADE_WEBHOOK ?? '');
   const [webhookInput, setWebhookInput] = useState('');
   const [showDiscordSettings, setShowDiscordSettings] = useState(false);
@@ -463,7 +463,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
     setBullEntryRules(prev => prev.map(r => ({ ...r, checked: false })));
     setBearEntryRules(prev => prev.map(r => ({ ...r, checked: false })));
     setPsych([]); setRiskAmt(''); setSl(''); setRr(''); setOutcome(null);
-    setImgBefore(null); setImgAfter(null); setImgResult(null); setVideoUrl(null);
+    setImgBefore(null); setImgAfter(null); setImgDaily(null); setImgWeekly(null);
     // Advance date by 1 day so backtesting flows forward automatically
     setDate(prev => {
       const d = new Date(prev + 'T12:00:00');
@@ -542,13 +542,13 @@ const JournalModule = ({ setTrades, date, setDate }) => {
       entChecked:  entryRules.filter(r => r.checked).length,
       entTotal:    entryRules.length,
       totalChecked: checkedCount, totalRules, pct, grade: grade.label,
-      imgBefore, imgAfter, imgResult,
+      imgBefore, imgAfter, imgDaily, imgWeekly,
     };
     setTrades(prev => [...prev, trade]);
-    // Persist images to IndexedDB (no size limit) separate from localStorage
-    imgSave(`${trade.id}_before`, imgBefore);
-    imgSave(`${trade.id}_after`,  imgAfter);
-    imgSave(`${trade.id}_result`, imgResult);
+    imgSave(`${trade.id}_before`,  imgBefore);
+    imgSave(`${trade.id}_after`,   imgAfter);
+    imgSave(`${trade.id}_daily`,   imgDaily);
+    imgSave(`${trade.id}_weekly`,  imgWeekly);
     postTradeToDiscord(trade);
     showToast(`✓ Trade logged — ${pair} ${outcome} | 1:${rr} | Grade ${grade.label}`);
     resetForm();
@@ -567,12 +567,13 @@ const JournalModule = ({ setTrades, date, setDate }) => {
       entChecked:  entryRules.filter(r => r.checked).length,
       entTotal:    entryRules.length,
       totalChecked: checkedCount, totalRules, pct, grade: grade.label,
-      imgBefore, imgAfter, imgResult,
+      imgBefore, imgAfter, imgDaily, imgWeekly,
     };
     setTrades(prev => [...prev, trade]);
-    imgSave(`${trade.id}_before`, imgBefore);
-    imgSave(`${trade.id}_after`,  imgAfter);
-    imgSave(`${trade.id}_result`, imgResult);
+    imgSave(`${trade.id}_before`,  imgBefore);
+    imgSave(`${trade.id}_after`,   imgAfter);
+    imgSave(`${trade.id}_daily`,   imgDaily);
+    imgSave(`${trade.id}_weekly`,  imgWeekly);
     postTradeToDiscord(trade);
     showToast(`🚫 No Trade logged — ${pair} ${date}`, '#f5a623');
     resetForm();
@@ -882,16 +883,12 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           {/* Chart Screenshots */}
           <div className="mb-4">
             <div className="text-[10px] text-[#5a5d7a] mb-2">Chart Screenshots</div>
-            <div className="grid grid-cols-3 gap-2">
-              <ImageSlot label="Before" value={imgBefore} onChange={setImgBefore} />
-              <ImageSlot label="After"  value={imgAfter}  onChange={setImgAfter}  />
-              <ImageSlot label="Result" value={imgResult} onChange={setImgResult} />
+            <div className="grid grid-cols-2 gap-2">
+              <ImageSlot label="Before"  value={imgBefore}  onChange={setImgBefore}  />
+              <ImageSlot label="After"   value={imgAfter}   onChange={setImgAfter}   />
+              <ImageSlot label="Daily"   value={imgDaily}   onChange={setImgDaily}   />
+              <ImageSlot label="Weekly"  value={imgWeekly}  onChange={setImgWeekly}  />
             </div>
-          </div>
-
-          {/* Replay Video */}
-          <div className="mb-4">
-            <VideoSlot value={videoUrl} onChange={setVideoUrl} />
           </div>
 
           {/* R:R */}
@@ -1038,9 +1035,9 @@ const HistoryModule = ({ trades, setTrades }) => {
   const handleExpand = (t) => {
     const next = expandedId === t.id ? null : t.id;
     setExpandedId(next);
-    if (next && !idbImages[t.id] && !t.imgBefore && !t.imgAfter && !t.imgResult) {
+    if (next && !idbImages[t.id] && !t.imgBefore && !t.imgAfter && !t.imgDaily && !t.imgWeekly) {
       imgLoadTrade(t.id).then(imgs => {
-        if (imgs.before || imgs.after || imgs.result)
+        if (imgs.before || imgs.after || imgs.daily || imgs.weekly)
           setIdbImages(prev => ({ ...prev, [t.id]: imgs }));
       }).catch(() => {});
     }
@@ -1168,7 +1165,7 @@ const HistoryModule = ({ trades, setTrades }) => {
           <tbody>
             {sorted.map((t, idx) => {
               const isExpanded = expandedId === t.id;
-              const hasImages  = t.imgBefore || t.imgAfter || t.imgResult || idbImages[t.id]?.before || idbImages[t.id]?.after || idbImages[t.id]?.result;
+              const hasImages  = t.imgBefore || t.imgAfter || t.imgDaily || t.imgWeekly || idbImages[t.id]?.before || idbImages[t.id]?.after || idbImages[t.id]?.daily || idbImages[t.id]?.weekly;
               const rowBg      = idx % 2 === 0 ? 'bg-[#161829]' : 'bg-[#13151f]';
               return (
                 <React.Fragment key={t.id}>
@@ -1226,9 +1223,10 @@ const HistoryModule = ({ trades, setTrades }) => {
                         {hasImages ? (
                           <div className="flex gap-3 flex-wrap">
                             {[
-                              { label: 'BEFORE', img: getImg(t, 'before'), color: '#e63946' },
-                              { label: 'AFTER',  img: getImg(t, 'after'),  color: '#00c896' },
-                              { label: 'RESULT', img: getImg(t, 'result'), color: '#f5a623' },
+                              { label: 'BEFORE',  img: getImg(t, 'before'),  color: '#e63946' },
+                              { label: 'AFTER',   img: getImg(t, 'after'),   color: '#00c896' },
+                              { label: 'DAILY',   img: getImg(t, 'daily'),   color: '#f5a623' },
+                              { label: 'WEEKLY',  img: getImg(t, 'weekly'),  color: '#4a90d9' },
                             ].filter(s => s.img).map(({ label, img, color }) => (
                               <div key={label} className="flex flex-col gap-1">
                                 <div className="text-[9px] font-black uppercase tracking-widest text-center" style={{ color }}>{label}</div>
@@ -1694,7 +1692,7 @@ const load = (key, fallback) => {
     const raw = localStorage.getItem('profx_trades');
     if (raw) {
       const trades = JSON.parse(raw);
-      const slim = trades.map(({ imgBefore, imgAfter, imgResult, ...t }) => t);
+      const slim = trades.map(({ imgBefore, imgAfter, imgDaily, imgWeekly, ...t }) => t);
       localStorage.setItem('profx_trades', JSON.stringify(slim));
     }
   } catch {}
