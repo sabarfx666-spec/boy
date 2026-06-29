@@ -883,11 +883,10 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           {/* Chart Screenshots */}
           <div className="mb-4">
             <div className="text-[10px] text-[#5a5d7a] mb-2">Chart Screenshots</div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <ImageSlot label="Before"  value={imgBefore}  onChange={setImgBefore}  />
               <ImageSlot label="After"   value={imgAfter}   onChange={setImgAfter}   />
               <ImageSlot label="Daily"   value={imgDaily}   onChange={setImgDaily}   />
-              <ImageSlot label="Weekly"  value={imgWeekly}  onChange={setImgWeekly}  />
             </div>
           </div>
 
