@@ -1802,7 +1802,11 @@ export default function App() {
   ];
 
   const [sysDiscordStatus, setSysDiscordStatus] = useState('idle');
-  const [sysWebhookUrl,   setSysWebhookUrl]   = useState(() => localStorage.getItem('profx-sys-webhook') ?? TRADE_WEBHOOK ?? '');
+  const [sysWebhookUrl,   setSysWebhookUrl]   = useState(() =>
+    localStorage.getItem('profx-sys-webhook') ||
+    localStorage.getItem('profx-discord-webhook') ||
+    TRADE_WEBHOOK || ''
+  );
   const [sysWebhookInput, setSysWebhookInput] = useState('');
   const [showSysSettings, setShowSysSettings] = useState(false);
 
@@ -1869,8 +1873,10 @@ export default function App() {
       }],
     };
 
-    const url = sysWebhookUrl || import.meta.env.VITE_DISCORD_SYSTEM;
-    if (!url) { setSysDiscordStatus('error'); setTimeout(() => setSysDiscordStatus('idle'), 3000); return; }
+    const url = sysWebhookUrl ||
+      localStorage.getItem('profx-discord-webhook') ||
+      import.meta.env.VITE_DISCORD_SYSTEM;
+    if (!url) { setShowSysSettings(true); setSysDiscordStatus('idle'); return; }
     try {
       const res = await fetch(url, {
         method: 'POST',
