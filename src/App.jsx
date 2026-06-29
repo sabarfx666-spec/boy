@@ -810,6 +810,11 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           </div>
         </div>
 
+      </div>
+
+      {/* ── Right Column ── */}
+      <div className="flex flex-col gap-4">
+
         <RuleSection
           rules={biasRules} setter={setBiasRules}
           newVal={newBiasRule} setNew={setNewBiasRule}
@@ -818,12 +823,6 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           expanded={htfExpanded} onToggle={() => setHtfExpanded(v => !v)}
           onCheckedChange={(c, t) => setHtfScore({ c, t })}
         />
-
-      </div>
-
-      {/* ── Right Column ── */}
-      <div className="flex flex-col gap-4">
-
         <RuleSection
           rules={entryRules} setter={setEntryRules}
           newVal={newEntRule} setNew={setNewEntRule}
