@@ -891,6 +891,32 @@ const JournalModule = ({ setTrades, date, setDate }) => {
             </div>
           )}
 
+        </Card>
+
+      </div>
+
+      {/* ── Right Column ── */}
+      <div className="flex flex-col gap-4">
+
+        <RuleSection
+          rules={biasRules} setter={setBiasRules}
+          newVal={newBiasRule} setNew={setNewBiasRule}
+          label="HTF Bias"
+          subtitle="Daily & 4-Hour Timeframe"
+          expanded={htfExpanded} onToggle={() => setHtfExpanded(v => !v)}
+          onCheckedChange={(c, t) => setHtfScore({ c, t })}
+        />
+        <RuleSection
+          rules={entryRules} setter={setEntryRules}
+          newVal={newEntRule} setNew={setNewEntRule}
+          label="LTF Entry"
+          subtitle="15-Minute & 1-Hour Timeframe"
+          expanded={ltfExpanded} onToggle={() => setLtfExpanded(v => !v)}
+          onCheckedChange={(c, t) => setLtfScore({ c, t })}
+        />
+
+        {/* Action Card */}
+        <Card>
           {/* Connect Discord */}
           <div className="mb-4">
             <button
@@ -969,28 +995,6 @@ const JournalModule = ({ setTrades, date, setDate }) => {
             </div>
           </div>
         </Card>
-
-      </div>
-
-      {/* ── Right Column ── */}
-      <div className="flex flex-col gap-4">
-
-        <RuleSection
-          rules={biasRules} setter={setBiasRules}
-          newVal={newBiasRule} setNew={setNewBiasRule}
-          label="HTF Bias"
-          subtitle="Daily & 4-Hour Timeframe"
-          expanded={htfExpanded} onToggle={() => setHtfExpanded(v => !v)}
-          onCheckedChange={(c, t) => setHtfScore({ c, t })}
-        />
-        <RuleSection
-          rules={entryRules} setter={setEntryRules}
-          newVal={newEntRule} setNew={setNewEntRule}
-          label="LTF Entry"
-          subtitle="15-Minute & 1-Hour Timeframe"
-          expanded={ltfExpanded} onToggle={() => setLtfExpanded(v => !v)}
-          onCheckedChange={(c, t) => setLtfScore({ c, t })}
-        />
 
       </div>
     </div>
