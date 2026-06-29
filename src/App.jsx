@@ -818,6 +818,12 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           expanded={htfExpanded} onToggle={() => setHtfExpanded(v => !v)}
           onCheckedChange={(c, t) => setHtfScore({ c, t })}
         />
+
+      </div>
+
+      {/* ── Right Column ── */}
+      <div className="flex flex-col gap-4">
+
         <RuleSection
           rules={entryRules} setter={setEntryRules}
           newVal={newEntRule} setNew={setNewEntRule}
@@ -826,11 +832,6 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           expanded={ltfExpanded} onToggle={() => setLtfExpanded(v => !v)}
           onCheckedChange={(c, t) => setLtfScore({ c, t })}
         />
-
-      </div>
-
-      {/* ── Right Column ── */}
-      <div className="flex flex-col gap-4">
 
         {/* Pre-Trade Summary */}
         <Card>
