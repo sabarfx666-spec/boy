@@ -1763,7 +1763,7 @@ export default function App() {
   const totalPnL  = trades.reduce((s, t) => s + t.pnl, 0);
   const winRate   = trades.length > 0 ? Math.round((winCount / trades.filter(t => t.status !== 'No Trade').length) * 100) : 0;
   const avgRR     = trades.length > 0 ? (trades.reduce((s, t) => s + (t.rr || 0), 0) / trades.length).toFixed(1) : '0.0';
-  const GOAL      = 100;
+  const GOAL      = 1000;
   const progress  = Math.min((trades.length / GOAL) * 100, 100);
 
   const sendSystemToDiscord = async () => {
