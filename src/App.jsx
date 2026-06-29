@@ -481,7 +481,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
     const pnlStr      = trade.pnl !== 0 ? `${trade.pnl > 0 ? '+' : ''}$${trade.pnl.toFixed(2)} USD` : '—';
 
     const embed = {
-      title: `${statusEmoji}  ${trade.pair}  ·  ${trade.direction}  ·  ${trade.status.toUpperCase()}`,
+      title: `${statusEmoji}  ${trade.pair}  ·  ${trade.direction}  ·  ${(trade.status ?? 'PENDING').toUpperCase()}`,
       color: dirColor,
       fields: [
         { name: '📅 Date',     value: trade.date,                       inline: true },
