@@ -1035,6 +1035,11 @@ const HistoryModule = ({ trades, setTrades }) => {
     setDeleteId(null);
   };
 
+  const handleUpdateStatus = (t, newStatus) => {
+    const pnl = calcPnL(newStatus, t.riskAmt, t.rr);
+    setTrades(prev => prev.map(tr => tr.id === t.id ? { ...tr, status: newStatus, pnl } : tr));
+  };
+
   const confirmDeleteAll = () => {
     trades.forEach(t => imgDeleteTrade(t.id));
     setTrades([]);
@@ -1174,17 +1179,18 @@ const HistoryModule = ({ trades, setTrades }) => {
                     </td>
                     <td className="px-3 py-3"><StatusBadge status={t.status} /></td>
                     <td className="px-3 py-3 font-mono text-xs text-white">1:{t.rr}</td>
-                    <td className={`px-3 py-3 font-mono text-xs font-bold ${t.pnl >= 0 ? 'text-[#00c896]' : 'text-[#ff4757]'}`}>
-                      {t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}
+                    <td className={`px-3 py-3 font-mono text-xs font-bold ${!t.status ? 'text-[#3a3d4e]' : t.pnl >= 0 ? 'text-[#00c896]' : 'text-[#ff4757]'}`}>
+                      {!t.status ? '—' : `${t.pnl >= 0 ? '+' : ''}$${(t.pnl ?? 0).toFixed(2)}`}
                     </td>
                     <td className="px-3 py-3 text-xs text-[#6a6d8a] font-mono">{t.totalChecked}/{t.totalRules}</td>
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-1.5">
                         <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
                           t.grade === 'A+' ? 'bg-[rgba(0,200,150,0.12)] text-[#00c896]'
-                          : t.grade === 'B'  ? 'bg-[rgba(245,166,35,0.12)] text-[#f5a623]'
-                          : t.grade === 'C'  ? 'bg-[rgba(245,158,11,0.12)] text-[#f59e0b]'
-                          : 'bg-[rgba(255,71,87,0.12)] text-[#ff4757]'
+                          : t.grade === 'B+' ? 'bg-[rgba(167,139,250,0.12)] text-[#a78bfa]'
+                          : t.grade === 'C-' ? 'bg-[rgba(245,166,35,0.12)] text-[#f5a623]'
+                          : t.grade === 'D-' ? 'bg-[rgba(255,71,87,0.12)] text-[#ff4757]'
+                          : 'bg-[rgba(90,93,122,0.12)] text-[#5a5d7a]'
                         }`}>{t.grade}</span>
                         {hasImages && <span className="text-[11px]" title="Has screenshots">📸</span>}
                       </div>
@@ -1201,6 +1207,32 @@ const HistoryModule = ({ trades, setTrades }) => {
                   {isExpanded && (
                     <tr className={rowBg}>
                       <td colSpan="11" className="px-4 pb-4 pt-2">
+                        {/* Outcome selector */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-[10px] text-[#5a5d7a] uppercase tracking-widest mr-1">Result:</span>
+                          {[
+                            { s: 'Win',    label: 'WIN',    bg: '#00c896', tc: 'black' },
+                            { s: 'Loss',   label: 'LOSS',   bg: '#ff4757', tc: 'white' },
+                            { s: 'Break Even', label: 'BE', bg: '#f5a623', tc: 'black' },
+                            { s: 'Missed', label: 'MISSED', bg: '#2a2d3e', tc: '#8888aa' },
+                          ].map(({ s, label, bg, tc }) => (
+                            <button
+                              key={s}
+                              onClick={e => { e.stopPropagation(); handleUpdateStatus(t, t.status === s ? null : s); }}
+                              className="px-3 py-1 rounded-lg text-[10px] font-black tracking-wider transition-all"
+                              style={{
+                                background: t.status === s ? bg : 'transparent',
+                                color: t.status === s ? tc : '#5a5d7a',
+                                border: `1px solid ${t.status === s ? bg : '#2a2d3e'}`,
+                              }}
+                            >{label}</button>
+                          ))}
+                          {t.status && (
+                            <span className="text-[10px] font-mono font-bold ml-2" style={{ color: t.pnl > 0 ? '#00c896' : t.pnl < 0 ? '#ff4757' : '#5a5d7a' }}>
+                              {t.pnl > 0 ? '+' : ''}${(t.pnl ?? 0).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
                         {hasImages ? (
                           <div className="flex gap-3 flex-wrap">
                             {[
