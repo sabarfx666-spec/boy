@@ -1741,6 +1741,28 @@ const load = (key, fallback) => {
   catch { return fallback; }
 };
 
+// Run once at module load — strip any base64 images that filled localStorage
+(() => {
+  try {
+    const raw = localStorage.getItem('profx_trades');
+    if (raw) {
+      const trades = JSON.parse(raw);
+      const slim = trades.map(({ imgBefore, imgAfter, imgResult, ...t }) => t);
+      localStorage.setItem('profx_trades', JSON.stringify(slim));
+    }
+  } catch {}
+  try {
+    const raw = localStorage.getItem('profx_weekly');
+    if (raw) {
+      const weekly = JSON.parse(raw);
+      const slim = Object.fromEntries(
+        Object.entries(weekly).map(([k, v]) => { const { imgBefore, imgAfter, ...rest } = v; return [k, rest]; })
+      );
+      localStorage.setItem('profx_weekly', JSON.stringify(slim));
+    }
+  } catch {}
+})();
+
 export default function App() {
   const [tab,          setTab]          = useState('journal');
   const [trades,       setTrades]       = useState(() => load('profx_trades', []));
