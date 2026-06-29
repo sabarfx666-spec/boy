@@ -3,7 +3,7 @@ import {
   TrendingUp, BookOpen, BarChart2, Plus, Trash2,
   Target, DollarSign, Activity, Award, Calendar,
   ChevronDown, CheckSquare, RefreshCw, AlertTriangle,
-  X, Check, Newspaper, Lock, Upload, Video, Coffee, Sun, LogIn, LayoutGrid
+  X, Check, Newspaper, Lock, Upload, Video, Coffee, Sun, Moon, LogIn, LayoutGrid
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, ReferenceLine,
@@ -1744,6 +1744,12 @@ export default function App() {
   }, [weeklyPlans]);
   useEffect(() => { try { localStorage.setItem('profx_date', JSON.stringify(date)); } catch {} }, [date]);
 
+  const [lightMode, setLightMode] = useState(() => localStorage.getItem('profx_theme') === 'light');
+  useEffect(() => {
+    document.documentElement.classList.toggle('light', lightMode);
+    try { localStorage.setItem('profx_theme', lightMode ? 'light' : 'dark'); } catch {}
+  }, [lightMode]);
+
   const tabs = [
     { id: 'journal',   label: 'Journal',        icon: <BookOpen    size={15} /> },
     { id: 'weekly',    label: 'Weekly Outlook',  icon: <LayoutGrid  size={15} /> },
@@ -1855,8 +1861,8 @@ export default function App() {
 
           {/* Nav */}
           <nav className="ml-auto flex items-center gap-1">
-            <button className="p-2 rounded-lg text-[#555] hover:text-white hover:bg-[#1a1a1a] transition-all mr-1">
-              <Sun size={15} />
+            <button onClick={() => setLightMode(v => !v)} className="p-2 rounded-lg text-[#555] hover:text-white hover:bg-[#1a1a1a] transition-all mr-1" title="Toggle light/dark mode">
+              {lightMode ? <Moon size={15} /> : <Sun size={15} />}
             </button>
             {tabs.map(t => (
               <button

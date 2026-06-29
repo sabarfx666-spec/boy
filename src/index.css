@@ -11,6 +11,12 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+/* Light mode — invert all colors, then re-invert images/charts */
+html.light body { background-color: #fff; filter: invert(1) hue-rotate(180deg); }
+html.light img,
+html.light canvas,
+html.light svg image { filter: invert(1) hue-rotate(180deg); }
+
 input[type='number']::-webkit-inner-spin-button,
 input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
