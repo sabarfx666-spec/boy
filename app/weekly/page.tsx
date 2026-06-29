@@ -5,10 +5,13 @@ import {
   Upload, X, Image as ImageIcon, FileText, Check, Send, Settings,
 } from "lucide-react";
 import { NewsAlarms } from "@/components/journal/NewsAlarms";
+import { imgSave, imgLoad } from "@/lib/db";
 
 const WEEKLY_KEY    = "sabar-weekly-outlook";
 const DISCORD_KEY   = "sabar-notify-discord";
 const SAVED_PAIRS_KEY = "sabar-weekly-saved-pairs";
+
+const weekImgKey = (ws: string, slot: string) => `weekly_${ws}_${slot}`;
 
 const PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "XAU/USD", "GBP/JPY", "EUR/JPY", "USD/CAD", "AUD/USD"];
 
@@ -70,7 +73,10 @@ export default function WeeklyOutlookPage() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(WEEKLY_KEY);
-      if (raw) setEntries(JSON.parse(raw));
+      if (raw) {
+        const parsed: Record<string, WeeklyEntry> = JSON.parse(raw);
+        setEntries(parsed);
+      }
       const sp = localStorage.getItem(SAVED_PAIRS_KEY);
       const wh = localStorage.getItem(DISCORD_KEY);
       if (wh) setWebhookInput(wh);
@@ -78,12 +84,40 @@ export default function WeeklyOutlookPage() {
     } catch {}
   }, []);
 
+  // Load images from IndexedDB whenever week changes
+  useEffect(() => {
+    (async () => {
+      const [imgBefore, imgAfter, imgDaily] = await Promise.all([
+        imgLoad(weekImgKey(weekStart, "monthly")),
+        imgLoad(weekImgKey(weekStart, "weekly")),
+        imgLoad(weekImgKey(weekStart, "daily")),
+      ]);
+      if (imgBefore || imgAfter || imgDaily) {
+        setEntries(prev => ({
+          ...prev,
+          [weekStart]: { ...(prev[weekStart] ?? BLANK(weekStart)), imgBefore, imgAfter, imgDaily },
+        }));
+      }
+    })();
+  }, [weekStart]);
+
   const entry: WeeklyEntry = entries[weekStart] ?? BLANK(weekStart);
 
   function save(patch: Partial<WeeklyEntry>) {
+    // Save images to IndexedDB, strip them from localStorage
+    if (patch.imgBefore !== undefined) imgSave(weekImgKey(weekStart, "monthly"), patch.imgBefore).catch(() => {});
+    if (patch.imgAfter  !== undefined) imgSave(weekImgKey(weekStart, "weekly"),  patch.imgAfter).catch(() => {});
+    if (patch.imgDaily  !== undefined) imgSave(weekImgKey(weekStart, "daily"),   patch.imgDaily).catch(() => {});
+
     const updated = { ...entries, [weekStart]: { ...entry, ...patch } };
     setEntries(updated);
-    localStorage.setItem(WEEKLY_KEY, JSON.stringify(updated));
+    const slimEntries = Object.fromEntries(
+      Object.entries(updated).map(([k, v]) => {
+        const { imgBefore: _b, imgAfter: _a, imgDaily: _d, ...rest } = v;
+        return [k, rest];
+      })
+    );
+    try { localStorage.setItem(WEEKLY_KEY, JSON.stringify(slimEntries)); } catch {}
   }
 
   function savePairsList(list: string[]) {
@@ -463,7 +497,7 @@ export default function WeeklyOutlookPage() {
 
       {/* Bottom row: Save + Discord */}
       <div className="grid grid-cols-2 gap-3">
-        <button onClick={() => { localStorage.setItem(WEEKLY_KEY, JSON.stringify(entries)); setSaveFeedback(true); setTimeout(() => setSaveFeedback(false), 2000); }}
+        <button onClick={() => { const slim = Object.fromEntries(Object.entries(entries).map(([k,v]) => { const {imgBefore:_b,imgAfter:_a,imgDaily:_d,...r}=v; return [k,r]; })); try { localStorage.setItem(WEEKLY_KEY, JSON.stringify(slim)); } catch {} setSaveFeedback(true); setTimeout(() => setSaveFeedback(false), 2000); }}
           className="py-3 rounded-xl font-mono text-sm font-bold flex items-center justify-center gap-2 transition-all"
           style={{
             background: saveFeedback ? "rgba(0,255,127,0.15)" : "rgba(106,236,225,0.1)",
