@@ -386,24 +386,24 @@ const VideoSlot = ({ value, onChange }) => {
 
 const JournalModule = ({ setTrades, date, setDate }) => {
   const [availableYears, setAvailableYears] = useState(() => load('profx_available_years', [2022, 2023, 2024, 2025, 2026]));
-  useEffect(() => { localStorage.setItem('profx_available_years', JSON.stringify(availableYears)); }, [availableYears]);
+  useEffect(() => { try { localStorage.setItem('profx_available_years', JSON.stringify(availableYears)); } catch {} }, [availableYears]);
   const [lockedYears, setLockedYears] = useState(() => load('profx_locked_years', []));
-  useEffect(() => { localStorage.setItem('profx_locked_years', JSON.stringify(lockedYears)); }, [lockedYears]);
+  useEffect(() => { try { localStorage.setItem('profx_locked_years', JSON.stringify(lockedYears)); } catch {} }, [lockedYears]);
   const [bias,        setBias]        = useState(null);
   const [session,     setSession]     = useState(null);
   const [tradeTime,   setTradeTime]   = useState(null);
   const [pair,        setPair]        = useState('EUR/USD');
   const [pairInput,   setPairInput]   = useState('');
   const [savedPairs,  setSavedPairs]  = useState(() => load('profx_saved_pairs', DEFAULT_PAIRS));
-  useEffect(() => { localStorage.setItem('profx_saved_pairs', JSON.stringify(savedPairs)); }, [savedPairs]);
+  useEffect(() => { try { localStorage.setItem('profx_saved_pairs', JSON.stringify(savedPairs)); } catch {} }, [savedPairs]);
   const [bullBiasRules,  setBullBiasRules]  = useState(() => load('profx_bull_bias',  DEFAULT_BULL_BIAS.map(r => ({ ...r }))));
   const [bearBiasRules,  setBearBiasRules]  = useState(() => load('profx_bear_bias',  DEFAULT_BEAR_BIAS.map(r => ({ ...r }))));
   const [bullEntryRules, setBullEntryRules] = useState(() => load('profx_bull_entry', DEFAULT_BULL_ENTRY.map(r => ({ ...r }))));
   const [bearEntryRules, setBearEntryRules] = useState(() => load('profx_bear_entry', DEFAULT_BEAR_ENTRY.map(r => ({ ...r }))));
-  useEffect(() => { localStorage.setItem('profx_bull_bias',  JSON.stringify(bullBiasRules));  }, [bullBiasRules]);
-  useEffect(() => { localStorage.setItem('profx_bear_bias',  JSON.stringify(bearBiasRules));  }, [bearBiasRules]);
-  useEffect(() => { localStorage.setItem('profx_bull_entry', JSON.stringify(bullEntryRules)); }, [bullEntryRules]);
-  useEffect(() => { localStorage.setItem('profx_bear_entry', JSON.stringify(bearEntryRules)); }, [bearEntryRules]);
+  useEffect(() => { try { localStorage.setItem('profx_bull_bias',  JSON.stringify(bullBiasRules));  } catch {} }, [bullBiasRules]);
+  useEffect(() => { try { localStorage.setItem('profx_bear_bias',  JSON.stringify(bearBiasRules));  } catch {} }, [bearBiasRules]);
+  useEffect(() => { try { localStorage.setItem('profx_bull_entry', JSON.stringify(bullEntryRules)); } catch {} }, [bullEntryRules]);
+  useEffect(() => { try { localStorage.setItem('profx_bear_entry', JSON.stringify(bearEntryRules)); } catch {} }, [bearEntryRules]);
 
   // Active rules depend on selected bias (default to bullish before selection)
   const isBear = bias === 'Bearish';
@@ -1758,29 +1758,22 @@ export default function App() {
   });
 
   useEffect(() => {
-    const trySet = (key, data) => {
-      try { localStorage.setItem(key, JSON.stringify(data)); return true; }
-      catch { return false; }
-    };
-    // Try full save; if quota exceeded strip base64 images and retry
-    if (!trySet('profx_trades', trades)) {
-      trySet('profx_trades', trades.map(({ imgBefore, imgAfter, imgResult, ...t }) => t));
-    }
+    // Always strip images — trades table never needs base64 in localStorage
+    const slim = trades.map(({ imgBefore, imgAfter, imgResult, ...t }) => t);
+    try { localStorage.setItem('profx_trades', JSON.stringify(slim)); } catch {}
   }, [trades]);
 
   useEffect(() => {
-    const trySet = (key, data) => {
-      try { localStorage.setItem(key, JSON.stringify(data)); return true; }
-      catch { return false; }
-    };
-    if (!trySet('profx_weekly', weeklyPlans)) {
-      const slim = Object.fromEntries(
-        Object.entries(weeklyPlans).map(([k, v]) => { const { imgBefore, imgAfter, ...rest } = v; return [k, rest]; })
-      );
-      trySet('profx_weekly', slim);
-    }
+    // Strip weekly chart images before saving
+    const slim = Object.fromEntries(
+      Object.entries(weeklyPlans).map(([k, v]) => {
+        const { imgBefore, imgAfter, ...rest } = v;
+        return [k, rest];
+      })
+    );
+    try { localStorage.setItem('profx_weekly', JSON.stringify(slim)); } catch {}
   }, [weeklyPlans]);
-  useEffect(() => { localStorage.setItem('profx_date',    JSON.stringify(date));          }, [date]);
+  useEffect(() => { try { localStorage.setItem('profx_date', JSON.stringify(date)); } catch {} }, [date]);
 
   const tabs = [
     { id: 'journal',   label: 'Journal',        icon: <BookOpen    size={15} /> },
