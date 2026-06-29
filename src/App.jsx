@@ -1844,7 +1844,7 @@ export default function App() {
     const payload = {
       username: 'ProFx System',
       embeds: [{
-        title: `🏆  ProFx 100-Trade System Report`,
+        title: `🏆  ProFx ${GOAL}-Trade System Report`,
         color: pnlColor,
         fields: [
           {
