@@ -524,8 +524,8 @@ const JournalModule = ({ setTrades, date, setDate }) => {
   };
 
   const handleLog = () => {
-    if (!bias || !session || !outcome || !rr) {
-      alert('Please complete: Bias, Session, R:R, and Outcome before logging.');
+    if (!bias || !session || !rr) {
+      alert('Please complete: Bias, Session, and R:R before logging.');
       return;
     }
     const pnl = calcPnL(outcome, +riskAmt || 0, +rr);
@@ -903,28 +903,6 @@ const JournalModule = ({ setTrades, date, setDate }) => {
             </div>
           </div>
 
-          {/* Outcome buttons */}
-          <div className="mb-4">
-            <div className="text-[10px] text-[#5a5d7a] mb-2">Outcome</div>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { key: 'Win',         label: '✓ WIN',  active: 'bg-[#00c896] text-black shadow-lg shadow-[rgba(0,200,150,0.35)]' },
-                { key: 'Loss',        label: '✗ LOSS', active: 'bg-[#ff4757] text-white shadow-lg shadow-[rgba(255,71,87,0.35)]' },
-                { key: 'Break Even',  label: '— BE',   active: 'bg-[#f5a623] text-black shadow-lg shadow-[rgba(245,166,35,0.35)]' },
-              ].map(({ key, label, active }) => (
-                <button
-                  key={key} onClick={() => setOutcome(key)}
-                  className={`py-2.5 rounded-lg text-sm font-black tracking-wide transition-all ${
-                    outcome === key
-                      ? active
-                      : 'bg-[#0f111a] border border-[#2a2d3e] text-[#8888aa] hover:border-[#4a4d5e]'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* PnL preview */}
           {previewPnL !== null && (
