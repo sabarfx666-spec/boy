@@ -854,68 +854,45 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           </div>
         </Card>
 
-      </div>
-
-      {/* ── Right Column ── */}
-      <div className="flex flex-col gap-4">
-
-        <RuleSection
-          rules={biasRules} setter={setBiasRules}
-          newVal={newBiasRule} setNew={setNewBiasRule}
-          label="HTF Bias"
-          subtitle="Daily & 4-Hour Timeframe"
-          expanded={htfExpanded} onToggle={() => setHtfExpanded(v => !v)}
-          onCheckedChange={(c, t) => setHtfScore({ c, t })}
-        />
-        <RuleSection
-          rules={entryRules} setter={setEntryRules}
-          newVal={newEntRule} setNew={setNewEntRule}
-          label="LTF Entry"
-          subtitle="15-Minute & 1-Hour Timeframe"
-          expanded={ltfExpanded} onToggle={() => setLtfExpanded(v => !v)}
-          onCheckedChange={(c, t) => setLtfScore({ c, t })}
-        />
-
         {/* Log Trade Outcome */}
         <Card>
           <Label>Log Trade Outcome</Label>
 
           {/* Chart Screenshots */}
-          <div className="mb-4">
+          <div className="mb-5">
             <div className="text-[10px] text-[#5a5d7a] mb-2">Chart Screenshots</div>
-            <div className="grid grid-cols-3 gap-2">
-              <ImageSlot label="Before"  value={imgBefore}  onChange={setImgBefore}  />
-              <ImageSlot label="After"   value={imgAfter}   onChange={setImgAfter}   />
-              <ImageSlot label="Daily"   value={imgDaily}   onChange={setImgDaily}   />
+            <div className="grid grid-cols-3 gap-3">
+              <ImageSlot label="Before" value={imgBefore} onChange={setImgBefore} />
+              <ImageSlot label="After"  value={imgAfter}  onChange={setImgAfter}  />
+              <ImageSlot label="Daily"  value={imgDaily}  onChange={setImgDaily}  />
             </div>
           </div>
 
           {/* R:R */}
-          <div className="mb-4">
+          <div className="mb-5">
             <div className="text-[10px] text-[#5a5d7a] mb-1.5">Risk : Reward Achieved</div>
             <div className="flex items-center gap-2">
               <span className="text-[#5a5d7a] text-sm font-mono">1 :</span>
               <input
                 type="number" step="0.1" placeholder="2.5" value={rr}
                 onChange={e => setRr(e.target.value)}
-                className="flex-1 bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-[#e63946]"
+                className="flex-1 bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-3 text-base text-white font-mono focus:outline-none focus:border-[#e63946]"
               />
             </div>
           </div>
 
-
           {/* PnL preview */}
           {previewPnL !== null && (
-            <div className="mb-4 flex items-center justify-between p-3 rounded-lg bg-[#0f111a] border border-[#2a2d3e]">
+            <div className="mb-5 flex items-center justify-between p-4 rounded-lg bg-[#0f111a] border border-[#2a2d3e]">
               <span className="text-[10px] text-[#5a5d7a] uppercase tracking-wider">Estimated P&L</span>
-              <span className={`text-lg font-black font-mono ${previewPnL >= 0 ? 'text-[#00c896]' : 'text-[#ff4757]'}`}>
+              <span className={`text-xl font-black font-mono ${previewPnL >= 0 ? 'text-[#00c896]' : 'text-[#ff4757]'}`}>
                 {previewPnL >= 0 ? '+' : ''}${previewPnL.toFixed(2)}
               </span>
             </div>
           )}
 
           {/* Connect Discord */}
-          <div className="mb-3">
+          <div className="mb-4">
             <button
               onClick={() => { setWebhookInput(webhookUrl); setShowDiscordSettings(v => !v); }}
               className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all"
@@ -968,30 +945,53 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           </div>
 
           {/* 3 action buttons */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <button
               onClick={handleLog}
-              className="w-full py-3 rounded-xl font-black text-sm tracking-widest transition-all hover:opacity-90 active:scale-[0.98]"
+              className="w-full py-4 rounded-xl font-black text-base tracking-widest transition-all hover:opacity-90 active:scale-[0.98]"
               style={{ background: 'linear-gradient(135deg, #e63946, #00c896)', color: 'white' }}
             >
               ✓ TAKE TRADE
             </button>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleNoTrade}
-                className="py-2.5 rounded-xl font-black text-xs tracking-widest transition-all hover:opacity-90 active:scale-[0.98] bg-[#f5a623] text-black"
+                className="py-3 rounded-xl font-black text-sm tracking-widest transition-all hover:opacity-90 active:scale-[0.98] bg-[#f5a623] text-black"
               >
                 ✗ NO TRADE
               </button>
               <button
                 onClick={handleSkipDay}
-                className="py-2.5 rounded-xl font-black text-xs tracking-widest transition-all hover:opacity-90 active:scale-[0.98] bg-[#2a2d3e] text-[#8888aa] hover:text-white border border-[#3a3d4e]"
+                className="py-3 rounded-xl font-black text-sm tracking-widest transition-all hover:opacity-90 active:scale-[0.98] bg-[#2a2d3e] text-[#8888aa] hover:text-white border border-[#3a3d4e]"
               >
                 → SKIP DAY
               </button>
             </div>
           </div>
         </Card>
+
+      </div>
+
+      {/* ── Right Column ── */}
+      <div className="flex flex-col gap-4">
+
+        <RuleSection
+          rules={biasRules} setter={setBiasRules}
+          newVal={newBiasRule} setNew={setNewBiasRule}
+          label="HTF Bias"
+          subtitle="Daily & 4-Hour Timeframe"
+          expanded={htfExpanded} onToggle={() => setHtfExpanded(v => !v)}
+          onCheckedChange={(c, t) => setHtfScore({ c, t })}
+        />
+        <RuleSection
+          rules={entryRules} setter={setEntryRules}
+          newVal={newEntRule} setNew={setNewEntRule}
+          label="LTF Entry"
+          subtitle="15-Minute & 1-Hour Timeframe"
+          expanded={ltfExpanded} onToggle={() => setLtfExpanded(v => !v)}
+          onCheckedChange={(c, t) => setLtfScore({ c, t })}
+        />
+
       </div>
     </div>
   );
