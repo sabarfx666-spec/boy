@@ -830,59 +830,6 @@ const JournalModule = ({ setTrades, date, setDate }) => {
       {/* ── Right Column ── */}
       <div className="flex flex-col gap-4">
 
-        {/* Psychology */}
-        <Card>
-          <Label>Psychology State</Label>
-          <div className="flex flex-wrap gap-2">
-            {PSYCH_TAGS.map(tag => (
-              <button
-                key={tag} onClick={() => togglePsych(tag)}
-                className={`py-1.5 px-3.5 rounded-full text-xs font-semibold transition-all ${
-                  psych.includes(tag)
-                    ? 'bg-[#e63946] text-white shadow shadow-[rgba(230,57,70,0.4)]'
-                    : 'bg-[#0f111a] border border-[#2a2d3e] text-[#8888aa] hover:border-[#4a4d5e]'
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-          {psych.length > 0 && (
-            <div className="mt-2 text-[10px] text-[#5a5d7a]">
-              Tagged: {psych.join(' · ')}
-            </div>
-          )}
-        </Card>
-
-        {/* Position Calculator */}
-        <Card>
-          <Label>Position Calculator</Label>
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div>
-              <div className="text-[10px] text-[#5a5d7a] mb-1">Risk Amount ($)</div>
-              <input
-                type="number" placeholder="100" value={riskAmt}
-                onChange={e => setRiskAmt(e.target.value)}
-                className="w-full bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e63946]"
-              />
-            </div>
-            <div>
-              <div className="text-[10px] text-[#5a5d7a] mb-1">Stop Loss (Pips)</div>
-              <input
-                type="number" placeholder="20" value={sl}
-                onChange={e => setSl(e.target.value)}
-                className="w-full bg-[#0f111a] border border-[#2a2d3e] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#e63946]"
-              />
-            </div>
-          </div>
-          <div className="flex items-center justify-between p-3 rounded-lg bg-[#0f111a] border border-[#2a2d3e]">
-            <div>
-              <div className="text-[10px] text-[#5a5d7a] uppercase tracking-wider">Estimated Lot Size</div>
-              <div className="text-[10px] text-[#3a3d4e] mt-0.5">Risk ÷ (SL × $10/pip)</div>
-            </div>
-            <span className="text-3xl font-bold font-mono" style={{ color: '#00c896' }}>{lotSize}</span>
-          </div>
-        </Card>
 
         {/* Pre-Trade Summary */}
         <Card>
