@@ -44,13 +44,17 @@ export const imgDelete = async (...keys) => {
 };
 
 export const imgLoadTrade = async (id) => {
-  const [before, after, result] = await Promise.all([
+  const [weekly, daily, h4, entry, result, before, after] = await Promise.all([
+    imgLoad(`${id}_weekly`),
+    imgLoad(`${id}_daily`),
+    imgLoad(`${id}_4h`),
+    imgLoad(`${id}_entry`),
+    imgLoad(`${id}_result`),
     imgLoad(`${id}_before`),
     imgLoad(`${id}_after`),
-    imgLoad(`${id}_result`),
   ]);
-  return { before, after, result };
+  return { weekly, daily, '4h': h4, entry, result, before, after };
 };
 
 export const imgDeleteTrade = (id) =>
-  imgDelete(`${id}_before`, `${id}_after`, `${id}_result`);
+  imgDelete(`${id}_weekly`, `${id}_daily`, `${id}_4h`, `${id}_entry`, `${id}_result`, `${id}_before`, `${id}_after`);

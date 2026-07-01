@@ -425,10 +425,11 @@ const JournalModule = ({ setTrades, date, setDate }) => {
   const [sl,          setSl]          = useState('');
   const [rr,          setRr]          = useState('');
   const [outcome,     setOutcome]     = useState(null);
-  const [imgBefore,   setImgBefore]   = useState(null);
-  const [imgAfter,    setImgAfter]    = useState(null);
-  const [imgDaily,    setImgDaily]    = useState(null);
   const [imgWeekly,   setImgWeekly]   = useState(null);
+  const [imgDaily,    setImgDaily]    = useState(null);
+  const [img4h,       setImg4h]       = useState(null);
+  const [imgEntry,    setImgEntry]    = useState(null);
+  const [imgResult,   setImgResult]   = useState(null);
   const [webhookUrl,  setWebhookUrl]  = useState(() => localStorage.getItem('profx-discord-webhook') ?? TRADE_WEBHOOK ?? '');
   const [webhookInput, setWebhookInput] = useState('');
   const [showDiscordSettings, setShowDiscordSettings] = useState(false);
@@ -467,7 +468,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
     setBullEntryRules(prev => prev.map(r => ({ ...r, checked: false })));
     setBearEntryRules(prev => prev.map(r => ({ ...r, checked: false })));
     setPsych([]); setRiskAmt(''); setSl(''); setRr(''); setOutcome(null);
-    setImgBefore(null); setImgAfter(null); setImgDaily(null); setImgWeekly(null);
+    setImgWeekly(null); setImgDaily(null); setImg4h(null); setImgEntry(null); setImgResult(null);
     // Advance date by 1 day so backtesting flows forward automatically
     setDate(prev => {
       const d = new Date(prev + 'T12:00:00');
@@ -496,10 +497,10 @@ const JournalModule = ({ setTrades, date, setDate }) => {
         { name: '🏆 Grade',    value: `**${trade.grade}**  (${trade.pct}%)`, inline: true },
         { name: '✅ Rules',    value: `${trade.totalChecked} / ${trade.totalRules} checked`, inline: true },
         trade.psychology?.length ? { name: '🧠 Psych', value: trade.psychology.join(', '), inline: true } : null,
-        ...(trade.imgBefore ? [{ name: '📸 Charts', value: 'Before ↑  ·  After ↓', inline: false }] : []),
+        ...(trade.imgEntry ? [{ name: '📸 Charts', value: 'Entry ↑  ·  Result ↓', inline: false }] : []),
       ].filter(Boolean),
-      ...(trade.imgBefore ? { thumbnail: { url: 'attachment://before.png' } } : {}),
-      ...(trade.imgAfter  ? { image:     { url: 'attachment://after.png'  } } : {}),
+      ...(trade.imgEntry  ? { thumbnail: { url: 'attachment://before.png' } } : {}),
+      ...(trade.imgResult ? { image:     { url: 'attachment://after.png'  } } : {}),
       footer: { text: 'ProFx Backtesting Journal  ·  Trade Logged' },
       timestamp: new Date().toISOString(),
     };
@@ -515,8 +516,8 @@ const JournalModule = ({ setTrades, date, setDate }) => {
 
     const formData = new FormData();
     formData.append('payload_json', JSON.stringify({ username: 'ProFx Trade', embeds: [embed] }));
-    if (trade.imgBefore) formData.append('files[0]', dataURLtoBlob(trade.imgBefore), 'before.png');
-    if (trade.imgAfter)  formData.append('files[1]', dataURLtoBlob(trade.imgAfter),  'after.png');
+    if (trade.imgEntry)  formData.append('files[0]', dataURLtoBlob(trade.imgEntry),  'before.png');
+    if (trade.imgResult) formData.append('files[1]', dataURLtoBlob(trade.imgResult), 'after.png');
 
     const url = webhookUrl || TRADE_WEBHOOK;
     if (!url) return;
@@ -546,13 +547,14 @@ const JournalModule = ({ setTrades, date, setDate }) => {
       entChecked:  entryRules.filter(r => r.checked).length,
       entTotal:    entryRules.length,
       totalChecked: checkedCount, totalRules, pct, grade: grade.label,
-      imgBefore, imgAfter, imgDaily, imgWeekly,
+      imgWeekly, imgDaily, img4h, imgEntry, imgResult,
     };
     setTrades(prev => [...prev, trade]);
-    imgSave(`${trade.id}_before`,  imgBefore);
-    imgSave(`${trade.id}_after`,   imgAfter);
-    imgSave(`${trade.id}_daily`,   imgDaily);
     imgSave(`${trade.id}_weekly`,  imgWeekly);
+    imgSave(`${trade.id}_daily`,   imgDaily);
+    imgSave(`${trade.id}_4h`,      img4h);
+    imgSave(`${trade.id}_entry`,   imgEntry);
+    imgSave(`${trade.id}_result`,  imgResult);
     postTradeToDiscord(trade);
     showToast(`✓ Trade logged — ${pair} ${outcome} | 1:${rr} | Grade ${grade.label}`);
     resetForm();
@@ -571,13 +573,14 @@ const JournalModule = ({ setTrades, date, setDate }) => {
       entChecked:  entryRules.filter(r => r.checked).length,
       entTotal:    entryRules.length,
       totalChecked: checkedCount, totalRules, pct, grade: grade.label,
-      imgBefore, imgAfter, imgDaily, imgWeekly,
+      imgWeekly, imgDaily, img4h, imgEntry, imgResult,
     };
     setTrades(prev => [...prev, trade]);
-    imgSave(`${trade.id}_before`,  imgBefore);
-    imgSave(`${trade.id}_after`,   imgAfter);
-    imgSave(`${trade.id}_daily`,   imgDaily);
     imgSave(`${trade.id}_weekly`,  imgWeekly);
+    imgSave(`${trade.id}_daily`,   imgDaily);
+    imgSave(`${trade.id}_4h`,      img4h);
+    imgSave(`${trade.id}_entry`,   imgEntry);
+    imgSave(`${trade.id}_result`,  imgResult);
     postTradeToDiscord(trade);
     showToast(`🚫 No Trade logged — ${pair} ${date}`, '#f5a623');
     resetForm();
@@ -862,13 +865,15 @@ const JournalModule = ({ setTrades, date, setDate }) => {
         <Card>
           <Label>Log Trade Outcome</Label>
 
-          {/* Chart Screenshots */}
+          {/* Proof / Chart Snapshots */}
           <div className="mb-5">
-            <div className="text-[10px] text-[#5a5d7a] mb-2">Chart Screenshots</div>
-            <div className="grid grid-cols-3 gap-3">
-              <ImageSlot label="Before" sub="Entry Setup"   value={imgBefore} onChange={setImgBefore} />
-              <ImageSlot label="After"  sub="TP/SL Result"  value={imgAfter}  onChange={setImgAfter}  />
-              <ImageSlot label="Daily"  sub="1D"            value={imgDaily}  onChange={setImgDaily}  />
+            <div className="text-[10px] text-[#5a5d7a] mb-2">Proof / Chart Snapshots</div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <ImageSlot label="Weekly Proof" sub="1W"           value={imgWeekly} onChange={setImgWeekly} />
+              <ImageSlot label="Daily Proof"  sub="1D"           value={imgDaily}  onChange={setImgDaily}  />
+              <ImageSlot label="4H Proof"     sub="4H"           value={img4h}     onChange={setImg4h}     />
+              <ImageSlot label="Entry Proof"  sub="5m/15m"       value={imgEntry}  onChange={setImgEntry}  />
+              <ImageSlot label="After"        sub="TP/SL Result" value={imgResult} onChange={setImgResult} />
             </div>
           </div>
 
@@ -1053,9 +1058,9 @@ const HistoryModule = ({ trades, setTrades }) => {
   const handleExpand = (t) => {
     const next = expandedId === t.id ? null : t.id;
     setExpandedId(next);
-    if (next && !idbImages[t.id] && !t.imgBefore && !t.imgAfter && !t.imgDaily && !t.imgWeekly) {
+    if (next && !idbImages[t.id]) {
       imgLoadTrade(t.id).then(imgs => {
-        if (imgs.before || imgs.after || imgs.daily || imgs.weekly)
+        if (Object.values(imgs).some(Boolean))
           setIdbImages(prev => ({ ...prev, [t.id]: imgs }));
       }).catch(() => {});
     }
@@ -1188,7 +1193,8 @@ const HistoryModule = ({ trades, setTrades }) => {
           <tbody>
             {sorted.map((t, idx) => {
               const isExpanded = expandedId === t.id;
-              const hasImages  = t.imgBefore || t.imgAfter || t.imgDaily || t.imgWeekly || idbImages[t.id]?.before || idbImages[t.id]?.after || idbImages[t.id]?.daily || idbImages[t.id]?.weekly;
+              const hasImages  = t.imgWeekly || t.imgDaily || t.img4h || t.imgEntry || t.imgResult || t.imgBefore || t.imgAfter ||
+                                 (idbImages[t.id] && Object.values(idbImages[t.id]).some(Boolean));
               const rowBg      = idx % 2 === 0 ? 'bg-[#161829]' : 'bg-[#13151f]';
               return (
                 <React.Fragment key={t.id}>
@@ -1273,10 +1279,13 @@ const HistoryModule = ({ trades, setTrades }) => {
                         {hasImages ? (
                           <div className="flex gap-3 flex-wrap">
                             {[
+                              { label: 'WEEKLY',  img: getImg(t, 'weekly'),  color: '#4a90d9' },
+                              { label: 'DAILY',   img: getImg(t, 'daily'),   color: '#f5a623' },
+                              { label: '4H',      img: getImg(t, '4h'),      color: '#a78bfa' },
+                              { label: 'ENTRY',   img: getImg(t, 'entry'),   color: '#e63946' },
+                              { label: 'RESULT',  img: getImg(t, 'result'),  color: '#00c896' },
                               { label: 'BEFORE',  img: getImg(t, 'before'),  color: '#e63946' },
                               { label: 'AFTER',   img: getImg(t, 'after'),   color: '#00c896' },
-                              { label: 'DAILY',   img: getImg(t, 'daily'),   color: '#f5a623' },
-                              { label: 'WEEKLY',  img: getImg(t, 'weekly'),  color: '#4a90d9' },
                             ].filter(s => s.img).map(({ label, img, color }) => (
                               <div key={label} className="flex flex-col gap-1">
                                 <div className="text-[9px] font-black uppercase tracking-widest text-center" style={{ color }}>{label}</div>
@@ -1742,7 +1751,7 @@ const load = (key, fallback) => {
     const raw = localStorage.getItem('profx_trades');
     if (raw) {
       const trades = JSON.parse(raw);
-      const slim = trades.map(({ imgBefore, imgAfter, imgDaily, imgWeekly, ...t }) => t);
+      const slim = trades.map(({ imgWeekly, imgDaily, img4h, imgEntry, imgResult, imgBefore, imgAfter, ...t }) => t);
       localStorage.setItem('profx_trades', JSON.stringify(slim));
     }
   } catch {}
@@ -1776,7 +1785,7 @@ export default function App() {
 
   useEffect(() => {
     // Always strip images — trades table never needs base64 in localStorage
-    const slim = trades.map(({ imgBefore, imgAfter, imgResult, ...t }) => t);
+    const slim = trades.map(({ imgWeekly, imgDaily, img4h, imgEntry, imgResult, imgBefore, imgAfter, ...t }) => t);
     try { localStorage.setItem('profx_trades', JSON.stringify(slim)); } catch {}
   }, [trades]);
 
