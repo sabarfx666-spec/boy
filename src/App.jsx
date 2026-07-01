@@ -3,7 +3,7 @@ import {
   TrendingUp, BookOpen, BarChart2, Plus, Trash2,
   Target, DollarSign, Activity, Award, Calendar,
   ChevronDown, CheckSquare, RefreshCw, AlertTriangle,
-  X, Check, Newspaper, Lock, Upload, Video, Coffee, Sun, Moon, LogIn, LayoutGrid
+  X, Check, Newspaper, Lock, Upload, Video, Coffee, Sun, Moon, LogIn, LayoutGrid, Camera, Clipboard
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, ReferenceLine,
@@ -265,7 +265,7 @@ const RuleSection = ({ rules, setter, newVal, setNew, label, subtitle, expanded,
   );
 };
 
-const ImageSlot = ({ label, value, onChange }) => {
+const ImageSlot = ({ label, sub, value, onChange }) => {
   const fileRef = useRef(null);
   const zoneRef = useRef(null);
 
@@ -289,16 +289,18 @@ const ImageSlot = ({ label, value, onChange }) => {
   };
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="text-[9px] font-bold uppercase tracking-widest text-[#5a5d7a] text-center">{label}</div>
+    <div className="flex flex-col">
       <input ref={fileRef} type="file" accept="image/*" className="hidden"
         onChange={e => handleFile(e.target.files?.[0])} />
       {value ? (
-        <div className="relative rounded-lg overflow-hidden border border-[#2a2d3e] group">
-          <img src={value} alt={label} className="w-full h-24 object-cover" />
+        <div className="relative rounded-xl overflow-hidden border border-[#2a2d3e] group">
+          <img src={value} alt={label} className="w-full h-44 object-cover" />
+          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1.5">
+            <span className="text-[10px] font-black text-white tracking-wider">{label}</span>
+          </div>
           <button onClick={() => onChange(null)}
-            className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-[rgba(0,0,0,0.75)] rounded-full p-0.5">
-            <X size={10} className="text-white" />
+            className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-[rgba(0,0,0,0.75)] rounded-full p-1">
+            <X size={12} className="text-white" />
           </button>
         </div>
       ) : (
@@ -308,21 +310,23 @@ const ImageSlot = ({ label, value, onChange }) => {
           onPaste={handlePaste}
           onDrop={handleDrop}
           onDragOver={e => e.preventDefault()}
-          className="relative w-full h-24 rounded-lg border-2 border-dashed border-[#2a2d3e] flex flex-col items-center justify-center gap-1 hover:border-[#e63946] hover:bg-[rgba(230,57,70,0.04)] transition-all focus:outline-none focus:border-[#e63946] outline-none"
+          className="relative w-full h-44 rounded-xl border-2 border-dashed border-[#2a2d3e] flex flex-col items-center justify-center gap-1.5 hover:border-[#e63946] hover:bg-[rgba(230,57,70,0.04)] transition-all focus:outline-none focus:border-[#e63946] outline-none"
         >
           {/* Click zone: focuses for paste */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => zoneRef.current?.focus()} />
-          {/* Upload icon */}
+          <Camera size={26} className="text-[#e63946] pointer-events-none" />
+          <div className="text-sm font-black text-white pointer-events-none">{label}</div>
+          {sub && <div className="text-[10px] font-mono text-[#5a5d7a] pointer-events-none">{sub}</div>}
+          <div className="flex items-center gap-1 text-[10px] text-[#5a5d7a] pointer-events-none mt-1">
+            <Clipboard size={10} /> Click + Ctrl+V to paste
+          </div>
+          <div className="text-[10px] text-[#5a5d7a] pointer-events-none">or drag & drop</div>
           <button
             onClick={e => { e.stopPropagation(); fileRef.current?.click(); }}
-            className="relative z-10 p-1.5 rounded-lg bg-[#1e2038] text-[#e63946] hover:bg-[#2a2d3e] transition-all"
-            title="Upload file"
+            className="relative z-10 flex items-center gap-1 text-[11px] font-bold text-[#e63946] hover:underline"
           >
-            <Upload size={14} />
+            <Upload size={11} /> Upload file
           </button>
-          <span className="text-[8px] text-[#3a3d4e] text-center leading-tight pointer-events-none">
-            Click → Ctrl+V to paste<br/>or drag & drop
-          </span>
         </div>
       )}
     </div>
@@ -862,9 +866,9 @@ const JournalModule = ({ setTrades, date, setDate }) => {
           <div className="mb-5">
             <div className="text-[10px] text-[#5a5d7a] mb-2">Chart Screenshots</div>
             <div className="grid grid-cols-3 gap-3">
-              <ImageSlot label="Before" value={imgBefore} onChange={setImgBefore} />
-              <ImageSlot label="After"  value={imgAfter}  onChange={setImgAfter}  />
-              <ImageSlot label="Daily"  value={imgDaily}  onChange={setImgDaily}  />
+              <ImageSlot label="Before" sub="Entry Setup"   value={imgBefore} onChange={setImgBefore} />
+              <ImageSlot label="After"  sub="TP/SL Result"  value={imgAfter}  onChange={setImgAfter}  />
+              <ImageSlot label="Daily"  sub="1D"            value={imgDaily}  onChange={setImgDaily}  />
             </div>
           </div>
 
