@@ -425,6 +425,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
   const [sl,          setSl]          = useState('');
   const [rr,          setRr]          = useState('');
   const [outcome,     setOutcome]     = useState(null);
+  const [tradeNote,   setTradeNote]   = useState('');
   const [imgWeekly,   setImgWeekly]   = useState(null);
   const [imgDaily,    setImgDaily]    = useState(null);
   const [img4h,       setImg4h]       = useState(null);
@@ -467,7 +468,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
     setBearBiasRules(prev => prev.map(r => ({ ...r, checked: false })));
     setBullEntryRules(prev => prev.map(r => ({ ...r, checked: false })));
     setBearEntryRules(prev => prev.map(r => ({ ...r, checked: false })));
-    setPsych([]); setRiskAmt(''); setSl(''); setRr(''); setOutcome(null);
+    setPsych([]); setRiskAmt(''); setSl(''); setRr(''); setOutcome(null); setTradeNote('');
     setImgWeekly(null); setImgDaily(null); setImg4h(null); setImgEntry(null); setImgResult(null);
     // Advance date by 1 day so backtesting flows forward automatically
     setDate(prev => {
@@ -497,6 +498,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
         { name: '🏆 Grade',    value: `**${trade.grade}**  (${trade.pct}%)`, inline: true },
         { name: '✅ Rules',    value: `${trade.totalChecked} / ${trade.totalRules} checked`, inline: true },
         trade.psychology?.length ? { name: '🧠 Psych', value: trade.psychology.join(', '), inline: true } : null,
+        trade.note ? { name: '📝 Note', value: trade.note.slice(0, 1024), inline: false } : null,
         ...(trade.imgEntry ? [{ name: '📸 Charts', value: 'Entry ↑  ·  Result ↓', inline: false }] : []),
       ].filter(Boolean),
       ...(trade.imgEntry  ? { thumbnail: { url: 'attachment://before.png' } } : {}),
@@ -547,6 +549,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
       entChecked:  entryRules.filter(r => r.checked).length,
       entTotal:    entryRules.length,
       totalChecked: checkedCount, totalRules, pct, grade: grade.label,
+      note: tradeNote.trim(),
       imgWeekly, imgDaily, img4h, imgEntry, imgResult,
     };
     setTrades(prev => [...prev, trade]);
@@ -573,6 +576,7 @@ const JournalModule = ({ setTrades, date, setDate }) => {
       entChecked:  entryRules.filter(r => r.checked).length,
       entTotal:    entryRules.length,
       totalChecked: checkedCount, totalRules, pct, grade: grade.label,
+      note: tradeNote.trim(),
       imgWeekly, imgDaily, img4h, imgEntry, imgResult,
     };
     setTrades(prev => [...prev, trade]);
@@ -874,6 +878,15 @@ const JournalModule = ({ setTrades, date, setDate }) => {
               <ImageSlot label="4H Proof"     sub="4H"           value={img4h}     onChange={setImg4h}     />
               <ImageSlot label="Entry Proof"  sub="5m/15m"       value={imgEntry}  onChange={setImgEntry}  />
               <ImageSlot label="After"        sub="TP/SL Result" value={imgResult} onChange={setImgResult} />
+              <div className="flex flex-col rounded-xl border border-dashed border-[#2a2d3e] bg-[#0f111a] p-3 min-h-[176px] focus-within:border-[#e63946] transition-colors">
+                <div className="text-[10px] text-[#5a5d7a] uppercase tracking-wider mb-2">📝 Trade Note</div>
+                <textarea
+                  value={tradeNote}
+                  onChange={e => setTradeNote(e.target.value)}
+                  placeholder="Entry reason, what you saw, mistakes, lessons…"
+                  className="flex-1 w-full bg-transparent text-sm text-white resize-none focus:outline-none placeholder-[#3a3d4e]"
+                />
+              </div>
             </div>
           </div>
 
@@ -1276,6 +1289,12 @@ const HistoryModule = ({ trades, setTrades }) => {
                             </span>
                           )}
                         </div>
+                        {t.note && (
+                          <div className="mb-3 px-3 py-2 rounded-lg bg-[#0f111a] border border-[#2a2d3e] text-xs text-[#c9cbe0] whitespace-pre-wrap">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-[#5a5d7a] mr-2">📝 Note</span>
+                            {t.note}
+                          </div>
+                        )}
                         {hasImages ? (
                           <div className="flex gap-3 flex-wrap">
                             {[
