@@ -3,7 +3,7 @@ import {
   TrendingUp, BookOpen, BarChart2, Plus, Trash2,
   Target, DollarSign, Activity, Award, Calendar,
   ChevronDown, CheckSquare, RefreshCw, AlertTriangle,
-  X, Check, Newspaper, Lock, Upload, Video, Coffee, Sun, Moon, LogIn, LayoutGrid, Camera, Clipboard
+  X, Check, Newspaper, Lock, Upload, Video, Coffee, Sun, Moon, LogIn, LayoutGrid, Camera, Clipboard, Mic
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, ReferenceLine,
@@ -426,6 +426,9 @@ const JournalModule = ({ setTrades, date, setDate }) => {
   const [rr,          setRr]          = useState('');
   const [outcome,     setOutcome]     = useState(null);
   const [tradeNote,   setTradeNote]   = useState('');
+  const [micOn,       setMicOn]       = useState(false);
+  const [micLang,     setMicLang]     = useState('so-SO'); // Somali default, toggle to en-US
+  const micRef = useRef(null);
   const [imgWeekly,   setImgWeekly]   = useState(null);
   const [imgDaily,    setImgDaily]    = useState(null);
   const [img4h,       setImg4h]       = useState(null);
@@ -440,6 +443,40 @@ const JournalModule = ({ setTrades, date, setDate }) => {
   const showToast = (msg, color = '#00c896') => {
     setToast({ msg, color });
     setTimeout(() => setToast(null), 2500);
+  };
+
+  const toggleMic = () => {
+    if (micOn) {
+      micRef.current?.stop();
+      return;
+    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      showToast('Voice input not supported in this browser', '#ff4757');
+      return;
+    }
+    const rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = false;
+    rec.lang = micLang;
+    rec.onresult = (e) => {
+      const text = Array.from(e.results).slice(e.resultIndex)
+        .map(r => r[0].transcript).join(' ').trim();
+      if (text) setTradeNote(prev => (prev ? prev.trimEnd() + ' ' : '') + text);
+    };
+    rec.onend = () => setMicOn(false);
+    rec.onerror = (e) => {
+      setMicOn(false);
+      const msg = e.error === 'not-allowed'
+        ? 'Mic blocked — open the app in Chrome (localhost:5173) and click Allow'
+        : e.error === 'no-speech'
+          ? 'No speech heard — try again closer to the mic'
+          : `Voice input error: ${e.error}`;
+      showToast(msg, '#ff4757');
+    };
+    micRef.current = rec;
+    rec.start();
+    setMicOn(true);
   };
 
   // Score state synced via callbacks from RuleSection children (rawChecked inside child is always correct)
@@ -879,11 +916,36 @@ const JournalModule = ({ setTrades, date, setDate }) => {
               <ImageSlot label="Entry Proof"  sub="5m/15m"       value={imgEntry}  onChange={setImgEntry}  />
               <ImageSlot label="After"        sub="TP/SL Result" value={imgResult} onChange={setImgResult} />
               <div className="flex flex-col rounded-xl border border-dashed border-[#2a2d3e] bg-[#0f111a] p-3 min-h-[176px] focus-within:border-[#e63946] transition-colors">
-                <div className="text-[10px] text-[#5a5d7a] uppercase tracking-wider mb-2">📝 Trade Note</div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-[10px] text-[#5a5d7a] uppercase tracking-wider">📝 Trade Note</div>
+                  <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => { micRef.current?.stop(); setMicLang(l => l === 'so-SO' ? 'en-US' : 'so-SO'); }}
+                    title="Switch voice language"
+                    className="px-1.5 py-1 rounded-lg text-[9px] font-mono font-bold transition-all"
+                    style={{ background: 'transparent', border: '1px solid #2a2d3e', color: '#5a5d7a' }}
+                  >
+                    {micLang === 'so-SO' ? 'SO' : 'EN'}
+                  </button>
+                  <button
+                    onClick={toggleMic}
+                    title={micOn ? 'Stop recording' : 'Speak your note'}
+                    className="p-1.5 rounded-lg transition-all"
+                    style={micOn
+                      ? { background: 'rgba(255,71,87,0.15)', border: '1px solid #ff4757', color: '#ff4757', animation: 'pulse 1.2s infinite' }
+                      : { background: 'transparent', border: '1px solid #2a2d3e', color: '#5a5d7a' }}
+                  >
+                    <Mic size={13} />
+                  </button>
+                  </div>
+                </div>
+                {micOn && (
+                  <div className="text-[9px] font-mono mb-1.5" style={{ color: '#ff4757' }}>● Listening… speak now</div>
+                )}
                 <textarea
                   value={tradeNote}
                   onChange={e => setTradeNote(e.target.value)}
-                  placeholder="Entry reason, what you saw, mistakes, lessons…"
+                  placeholder="Entry reason, what you saw, mistakes, lessons… or tap the mic and speak"
                   className="flex-1 w-full bg-transparent text-sm text-white resize-none focus:outline-none placeholder-[#3a3d4e]"
                 />
               </div>
